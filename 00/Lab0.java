@@ -1,6 +1,5 @@
 import java.io.*;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class Lab0 {
@@ -18,8 +17,7 @@ public class Lab0 {
          * 
          * convert return type to BigInteger so it supports the limit from the test case
          **/
-        return BigInteger.valueOf(x[0]).multiply(multiplyMod(N - 1, Mod, Arrays.copyOfRange(x, 1, N)))
-                .mod(BigInteger.valueOf(Mod));
+        return BigInteger.valueOf(x[N - 1]).multiply(multiplyMod(N - 1, Mod, x)).mod(BigInteger.valueOf(Mod));
     }
 
     public static void main(String[] args) throws IOException {
