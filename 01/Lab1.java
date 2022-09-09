@@ -1,4 +1,6 @@
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 public class Lab1 {
@@ -7,30 +9,29 @@ public class Lab1 {
 
     static int getTotalDeletedLetters(int N, char[] x) {
         // TODO: implement method getTotalDeletedLetter(int, char[]) to get the answer
-        char[] base = "SOFITA".toCharArray();
-        String s = new String(x);
-        int subseqs = 0;
-        int i = 0;
-        while (true) {
-            i = s.indexOf('S', i);
-            if (i == -1)
-                break;
-            boolean isSubSeq = true;
-            int pointer = i;
-            for (int j = 1; j < base.length; j++) {
-                pointer = s.indexOf(base[j], pointer);
-                if (pointer == -1) {
-                    isSubSeq = false;
-                    break;
+        String base = "SOFITA";
+        Map<Character, Integer> hmap = new HashMap<>();
+        hmap.put('S', 0);
+        hmap.put('O', 0);
+        hmap.put('F', 0);
+        hmap.put('I', 0);
+        hmap.put('T', 0);
+        hmap.put('A', 0);
+        for (int i = 0; i < N; i++) {
+            if (hmap.containsKey(x[i])) {
+                int j = base.indexOf(x[i]);
+                if (j > 0) {
+                    char prev_char = base.charAt(j - 1);
+                    if (hmap.get(prev_char) > 0) {
+                        hmap.put(x[i], hmap.get(x[i]) + 1);
+                        hmap.put(prev_char, hmap.get(prev_char) - 1);
+                    }
                 } else {
-                    s = s.substring(0, pointer) + s.substring(pointer + 1);
+                    hmap.put(x[i], hmap.get(x[i]) + 1);
                 }
             }
-            if (isSubSeq)
-                subseqs++;
-            i++;
         }
-        return N - (base.length * subseqs);
+        return N - (hmap.get('A') * 6);
     }
 
     public static void main(String[] args) throws IOException {
@@ -48,12 +49,12 @@ public class Lab1 {
             x[i] = in.next().charAt(0);
         }
 
-        long startTime = System.nanoTime();
+        // long startTime = System.nanoTime();
         int ans = getTotalDeletedLetters(N, x);
-        long endTime = System.nanoTime();
-        long totalTime = endTime - startTime;
+        // long endTime = System.nanoTime();
+        // long totalTime = endTime - startTime;
         out.println(ans);
-        System.out.println("Total time: " + totalTime);
+        // System.out.println("Total time: " + totalTime);
 
         // don't forget to close/flush the output
         out.close();
