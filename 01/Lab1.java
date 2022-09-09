@@ -10,6 +10,9 @@ public class Lab1 {
     static int getTotalDeletedLetters(int N, char[] x) {
         // TODO: implement method getTotalDeletedLetter(int, char[]) to get the answer
         String base = "SOFITA";
+
+        // create a hashmap containing all letters in base as keys
+        // and the values is 0 to perform counting
         Map<Character, Integer> hmap = new HashMap<>();
         hmap.put('S', 0);
         hmap.put('O', 0);
@@ -17,20 +20,34 @@ public class Lab1 {
         hmap.put('I', 0);
         hmap.put('T', 0);
         hmap.put('A', 0);
+
         for (int i = 0; i < N; i++) {
+            // if the current character is in hashmap keys
             if (hmap.containsKey(x[i])) {
+                // get the index of current character from base
                 int j = base.indexOf(x[i]);
                 if (j > 0) {
+                    // if j > 0: meaning current character is not the first char in base,
+                    // so we can access the previous char in base
                     char prev_char = base.charAt(j - 1);
                     if (hmap.get(prev_char) > 0) {
+                        // if previous char value is greater than 0
+                        // update current char value by 1
                         hmap.put(x[i], hmap.get(x[i]) + 1);
+                        // decrease prev char value by 1: meaning the char's
+                        // been used by current char
                         hmap.put(prev_char, hmap.get(prev_char) - 1);
                     }
                 } else {
+                    // update current char value by 1
                     hmap.put(x[i], hmap.get(x[i]) + 1);
                 }
             }
         }
+        // after all operations' been done, the value of A (the last char in base) will
+        // be how much SOFITA subsequences in x, so we multiply it with 6 (base.length)
+        // substract N with it, so we can get the length of the rest character that
+        // doens't form SOFITA
         return N - (hmap.get('A') * 6);
     }
 
