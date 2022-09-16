@@ -1,35 +1,30 @@
 import java.io.*;
 import java.util.ArrayDeque;
+import java.util.Stack;
 import java.util.StringTokenizer;
 
-public class Lab2 {
+public class Lab2v2 {
     // TODO : Silahkan menambahkan struktur data yang diperlukan
     private static InputReader in;
     private static PrintWriter out;
-    private static ArrayDeque<ArrayDeque<Integer>> conveyorBelt;
+    private static ArrayDeque<Stack<Integer>> conveyorBelt;
 
     static int geserKanan() {
         // TODO : Implementasi fitur geser kanan conveyor belt
-        // store to firstEl and remove the last toples in conveyorBelt
-        ArrayDeque<Integer> firstEl = conveyorBelt.removeLast();
-        // add firstEl to conveyorBelt to its head
+        Stack<Integer> firstEl = conveyorBelt.removeLast();
         conveyorBelt.addFirst(firstEl);
-        // return -1 if it's empty else return to top of firstEl
-        return firstEl.isEmpty() ? -1 : firstEl.getLast();
+        return firstEl.isEmpty() ? -1 : firstEl.peek();
     }
 
     static int beliRasa(int rasa) {
         // TODO : Implementasi fitur beli rasa, manfaatkan fitur geser kanan
+        Stack<Integer> currEl;
         for (int i = 0; i < conveyorBelt.size(); i++) {
-            // check if the top of first toples in conveyorBelt is equeal to rasa
-            if (!conveyorBelt.getFirst().isEmpty() && conveyorBelt.getFirst().getLast() == rasa) {
-                // remove the cake
-                conveyorBelt.getFirst().removeLast();
-                return i;
+            currEl = conveyorBelt.getFirst();
+            if (currEl.peek() == rasa) {
+                currEl.pop();
+                return i > 0 ? i : 0;
             }
-            // slide the conveyorBelt to the left instead of the right
-            // because its final state will be the same
-            // and it'll be faster because it will instantly find the nearest cake with sofita
             conveyorBelt.add(conveyorBelt.removeFirst());
         }
         return -1;
@@ -48,16 +43,16 @@ public class Lab2 {
         conveyorBelt = new ArrayDeque<>();
         for (int i = 0; i < N; ++i) {
             // TODO: Inisiasi toples ke-i
-            ArrayDeque<Integer> toples = new ArrayDeque<Integer>();
+            Stack<Integer> toples = new Stack<Integer>();
             for (int j = 0; j < X; j++) {
                 int rasaKeJ = in.nextInt();
                 // TODO: Inisiasi kue ke-j ke dalam toples ke-i
-                toples.add(rasaKeJ);
+                toples.push(rasaKeJ);
             }
             conveyorBelt.addFirst(toples);
         }
 
-        // out.println(conveyorBelt);
+        out.println(conveyorBelt);
         for (int i = 0; i < C; i++) {
             String perintah = in.next();
             if (perintah.equals("GESER_KANAN")) {
@@ -66,7 +61,7 @@ public class Lab2 {
                 int namaRasa = in.nextInt();
                 out.println(beliRasa(namaRasa));
             }
-            // out.println(conveyorBelt);
+            out.println(conveyorBelt);
         }
         out.close();
     }
