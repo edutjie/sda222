@@ -15,17 +15,17 @@ public class TP01 {
         OutputStream outputStream = System.out;
         out = new PrintWriter(outputStream);
 
-        int M = in.nextInt();
+        int M = in.nextInt(); // jumlah makanan di menu
         // masih salah data structure
         for (int i = 0; i < M; i++) {
-            int h = in.nextInt();
-            String t = in.next();
+            int h = in.nextInt(); // harga
+            String t = in.next(); // tipe makanan
             menu.put(t, h);
         }
 
-        int V = in.nextInt();
+        int V = in.nextInt(); // jumlah koki
         for (int i = 1; i <= V; i++) {
-            String S = in.next();
+            String S = in.next(); // spesialis
             koki.put(i, S);
         }
 
@@ -36,7 +36,16 @@ public class TP01 {
         for (int i = 0; i < Y; i++) {
             int Pi = in.nextInt(); // jumlah pelanggan yang datang pada hari ke-i
             for (int j = 0; j < Pi; j++) {
-                
+                int I = in.nextInt(); // id
+                String K = in.next(); // kesehatan
+                int U = in.nextInt(); // uang
+                int R;
+                if (K == "?")
+                    R = in.nextInt(); // range advance scanning
+            }
+            int X = in.nextInt(); // jumlah pelayanan
+            for (int k = 0; k < X; k++) {
+                String command = in.next();
             }
         }
 
