@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class Lab3 {
@@ -7,6 +8,9 @@ public class Lab3 {
 
     public static char[] A;
     public static int N;
+
+    public static int[] memory;
+    public static int[] pref;
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -23,6 +27,19 @@ public class Lab3 {
             A[i] = in.nextChar();
         }
 
+        // Inisialisasi array untuk Memorization
+        memory = new int[N];
+        Arrays.fill(memory, -1);
+
+        // Inisialisasi array untuk Prefix Sum
+        pref = new int[N];
+        for (int i = 0; i < N; i++) {
+            if (i > 0)
+                pref[i] = pref[i - 1] + (A[i] == 'R' ? 1 : 0);
+            else
+                pref[i] = A[i] == 'R' ? 1 : 0;
+        }
+
         // Run Solusi
         int solution = getMaxRedVotes(0, N - 1);
         out.print(solution);
@@ -35,23 +52,32 @@ public class Lab3 {
         // TODO : Implementasikan solusi rekursif untuk mendapatkan skor vote maksimal
         // untuk RED pada subarray A[start ... end] (inklusif)
 
+        // ide dari https://www.youtube.com/watch?v=PhWWJmaKfMc&ab_channel=takeUforward
+
         // base case
         if (start == end)
+            return A[start] == 'R' ? 1 : 0;
+        if (start > end)
             return 0;
+
+        // Memorization
+        if (memory[start] != -1)
+            return memory[start];
+
+        // recursion case
         int maxAns = Integer.MIN_VALUE;
-        for (int i = start; i < end; i++) {
-            int sum = calculateRed(start, i) + getMaxRedVotes(start + 1, end);
+        for (int i = start; i <= end; i++) {
+            int sum = calculateRed(start, i) + getMaxRedVotes(i + 1, end);
             maxAns = Math.max(maxAns, sum);
         }
-        return maxAns;
+
+        // store to memory and return maxAns
+        return memory[start] = maxAns;
     }
 
     public static int calculateRed(int start, int end) {
-        int countR = 0;
-        for (int i = start; i <= end; i++) {
-            if (A[i] == 'R')
-                countR++;
-        }
+        // menggunakan Prefix Sum untuk mencari jumlah R
+        int countR = pref[end] - (start > 0 ? pref[start - 1] : 0);
         int countB = end + 1 - start - countR;
         return countR > countB ? countR + countB : 0;
     }
