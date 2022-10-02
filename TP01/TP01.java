@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
@@ -22,6 +23,8 @@ public class TP01 {
     private static ArrayDeque<ArrayList<Integer>> pesanan = new ArrayDeque<>();
     private static HashMap<Integer, ArrayList<Integer>> pesananPelanggan = new HashMap<>();
     private static HashMap<Integer, Integer> promoCost = new HashMap<>();
+    private static int[] memoryD;
+    public static int[] pref;
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -66,6 +69,17 @@ public class TP01 {
         int N = in.nextInt(); // banyaknya kursi
 
         int Y = in.nextInt(); // jumlah hari beroperasi
+        memoryD = new int[M]; // inisialisasi array untuk Memorization
+
+        pref = new int[M]; // inisialisasi array untuk Prefix Sum
+        for (int i = 0; i < M; i++) {
+            pref[i] = (i > 0 ? pref[i - 1] : 0) + menu.get(i).get(0);
+        }
+        for (int i = 0; i < pref.length; i++) {
+            out.print(pref[i] + " ");
+        }
+        out.println();
+
         for (int i = 0; i < Y; i++) {
             int Pi = in.nextInt(); // jumlah pelanggan yang datang pada hari ke-i
             for (int j = 0; j < Pi; j++) {
@@ -100,18 +114,20 @@ public class TP01 {
                     promoCost.put((int) 'A', firstParam);
                     promoCost.put((int) 'G', secondParam);
                     promoCost.put((int) 'S', thirdParam);
-                    out.println(commandD(0, M));
+                    Arrays.fill(memoryD, -1); // reset array untuk Memorization
+                    out.println(commandD(0, M - 1, 1, 1, 1));
                 }
             }
             pelangganIn.clear();
             rLapar.clear();
             pesanan.clear();
         }
-        out.println(pesanan);
-        out.println(pelanggan);
-        out.println(pelangganIn);
-        out.println(rLapar);
-        out.println(koki);
+        // out.println(menu);
+        // out.println(pesanan);
+        // out.println(pelanggan);
+        // out.println(pelangganIn);
+        // out.println(rLapar);
+        // out.println(koki);
 
         out.close();
     }
@@ -165,13 +181,13 @@ public class TP01 {
 
         int t = menu.get(idxMakanan).get(1);
         if (t == 'A') {
-            sortKoki(kokiA);
+            sortKoki(kokiA, 0, kokiA.size() - 1);
             tmp.add(kokiA.get(0));
         } else if (t == 'S') {
-            sortKoki(kokiS);
+            sortKoki(kokiS, 0, kokiS.size() - 1);
             tmp.add(kokiS.get(0));
         } else {
-            sortKoki(kokiG);
+            sortKoki(kokiG, 0, kokiG.size() - 1);
             tmp.add(kokiG.get(0));
         }
 
@@ -189,21 +205,93 @@ public class TP01 {
         return tmp.get(2); // return idKoki
     }
 
-    public static void sortKoki(ArrayList<Integer> kokiSList) {
-        // menggunakan selection sort untuk sorting koki
-        // berdasarkan jumlah pelayanan dan id
-        for (int i = 0; i < kokiSList.size(); i++) {
-            for (int j = i + 1; j < kokiSList.size(); j++) {
-                int idKoki1 = kokiSList.get(i);
-                int idKoki2 = kokiSList.get(j);
-                if (koki.get(idKoki1).get(1) > koki.get(idKoki2).get(1)
-                        || (koki.get(idKoki1).get(1) == koki.get(idKoki2).get(1) && idKoki1 > idKoki2)) {
-                    kokiSList.set(i, idKoki2);
-                    kokiSList.set(j, idKoki1);
-                }
-            }
+    public static void sortKoki(ArrayList<Integer> arr, int l, int r) {
+        if (l < r) {
+            int m = (l + r) / 2;
+
+            sortKoki(arr, l, m);
+            sortKoki(arr, m + 1, r);
+
+            sortKokiMerger(arr, l, m, r);
         }
     }
+
+    public static void sortKokiMerger(ArrayList<Integer> arr, int l, int m, int r) {
+        // ide dari https://www.geeksforgeeks.org/merge-sort/
+
+        int n1 = m - l + 1;
+        int n2 = r - m;
+
+        ArrayList<Integer> L = new ArrayList<>();
+        ArrayList<Integer> R = new ArrayList<>();
+
+        for (int i = 0; i < n1; i++) {
+            L.add(arr.get(l + i));
+        }
+
+        for (int j = 0; j < n2; j++) {
+            R.add(arr.get(m + 1 + j));
+        }
+
+        int i = 0, j = 0;
+
+        int k = l;
+        while (i < n1 && j < n2) {
+            if (koki.get(L.get(i)).get(1) < koki.get(R.get(j)).get(1)) {
+                arr.set(k, L.get(i));
+                i++;
+            } else if (koki.get(L.get(i)).get(1) > koki.get(R.get(j)).get(1)) {
+                arr.set(k, R.get(j));
+                j++;
+            } else {
+                if (koki.get(L.get(i)).get(0) > koki.get(R.get(j)).get(0)) {
+                    arr.set(k, L.get(i));
+                    i++;
+                } else if (koki.get(L.get(i)).get(0) < koki.get(R.get(j)).get(0)) {
+                    arr.set(k, R.get(j));
+                    j++;
+                } else {
+                    if (L.get(i) < R.get(j)) {
+                        arr.set(k, L.get(i));
+                        i++;
+                    } else {
+                        arr.set(k, R.get(j));
+                        j++;
+                    }
+                }
+            }
+            k++;
+        }
+
+        while (i < n1) {
+            arr.set(k, L.get(i));
+            i++;
+            k++;
+        }
+
+        while (j < n2) {
+            arr.set(k, R.get(j));
+            j++;
+            k++;
+        }
+    }
+
+    // public static void sortKoki(ArrayList<Integer> kokiSList) {
+    // // menggunakan selection sort untuk sorting koki
+    // // berdasarkan jumlah pelayanan dan id
+    // for (int i = 0; i < kokiSList.size(); i++) {
+    // for (int j = i + 1; j < kokiSList.size(); j++) {
+    // int idKoki1 = kokiSList.get(i);
+    // int idKoki2 = kokiSList.get(j);
+    // if (koki.get(idKoki1).get(1) > koki.get(idKoki2).get(1)
+    // || (koki.get(idKoki1).get(1) == koki.get(idKoki2).get(1) && idKoki1 >
+    // idKoki2)) {
+    // kokiSList.set(i, idKoki2);
+    // kokiSList.set(j, idKoki1);
+    // }
+    // }
+    // }
+    // }
 
     public static int commandL() {
         ArrayList<Integer> currPesanan = pesanan.poll();
@@ -219,7 +307,8 @@ public class TP01 {
             totalPrice += menu.get(idxMakanan).get(0);
         }
         pelangganIn.remove((Integer) idPelanggan);
-        pelangganIn.add(rLapar.poll());
+        if (!rLapar.isEmpty())
+            pelangganIn.add(rLapar.poll());
         if (totalPrice > currPelanggan.get(1)) {
             pelangganBlackList.add(idPelanggan);
             return 0;
@@ -229,37 +318,15 @@ public class TP01 {
 
     public static void commandC(int Q) {
         ArrayList<Integer> kokiIdList = new ArrayList<>(koki.keySet());
-        sortFewestKoki(kokiIdList);
+        sortKoki(kokiIdList, 0, kokiIdList.size() - 1);
         for (int i = 0; i < Q; i++) {
             out.print(kokiIdList.get(i) + " "); // idKoki Q teratas
         }
         out.println();
-        out.println(kokiIdList);
+        // out.println(kokiIdList);
     }
 
-    public static void sortFewestKoki(ArrayList<Integer> kokiIdList) {
-        for (int i = 0; i < kokiIdList.size(); i++) {
-            for (int j = i + 1; j < koki.size(); j++) {
-                int idKoki1 = kokiIdList.get(i);
-                int idKoki2 = kokiIdList.get(j);
-                if (koki.get(idKoki1).get(1) > koki.get(idKoki2).get(1)) {
-                    kokiIdList.set(i, idKoki2);
-                    kokiIdList.set(j, idKoki1);
-                } else if (koki.get(idKoki1).get(1) == koki.get(idKoki2).get(1)
-                        && koki.get(idKoki1).get(0) < koki.get(idKoki2).get(0)) {
-                    kokiIdList.set(i, idKoki2);
-                    kokiIdList.set(j, idKoki1);
-                } else if (koki.get(idKoki1).get(1) == koki.get(idKoki2).get(1)
-                        && koki.get(idKoki1).get(0) == koki.get(idKoki2).get(0)
-                        && idKoki1 > idKoki2) {
-                    kokiIdList.set(i, idKoki2);
-                    kokiIdList.set(j, idKoki1);
-                }
-            }
-        }
-    }
-
-    public static int commandD(int start, int end) {
+    public static int commandD(int start, int end, int AQuota, int SQuota, int GQuota) {
         // base case
         if (start == end)
             return menu.get(start).get(0);
@@ -267,30 +334,42 @@ public class TP01 {
             return 0;
 
         // Memorization
-        // if (memory[start] != -1)
-        // return memory[start];
+        if (memoryD[start] != -1)
+            return memoryD[start];
+
+        HashMap<Integer, Integer> quota = new HashMap<>();
+        quota.put((int) 'A', AQuota);
+        quota.put((int) 'S', SQuota);
+        quota.put((int) 'G', GQuota);
+        // out.println("AQuota: " + AQuota);
 
         // recursion case
         int minCost = Integer.MAX_VALUE;
         for (int i = start; i <= end; i++) {
-            int sum = calcD(start, i) + commandD(i + 1, end);
+            HashMap<Integer, Integer> tmp = calcD(start, i, quota);
+            // out.println("AQuota dari tmp: " + tmp.get((int) 'A'));
+            int sum = tmp.get(-1) + commandD(i + 1, end, tmp.get((int) 'A'), tmp.get((int) 'S'), tmp.get((int) 'G'));
             minCost = Math.min(minCost, sum);
         }
 
         // store to memory and return minCost
-        return minCost; // harga min untuk beli seluruh menu makanan
+        return memoryD[start] = minCost; // harga min untuk beli seluruh menu makanan
     }
 
-    public static int calcD(int start, int end) {
-        if (menu.get(start).get(1) == menu.get(end).get(1)) {
-            return (end - start) * promoCost.get(menu.get(start).get(1));
-        }
+    public static HashMap<Integer, Integer> calcD(int start, int end, HashMap<Integer, Integer> quota) {
+        HashMap<Integer, Integer> tmp = new HashMap<>();
+        tmp.put((int) 'A', quota.get((int) 'A'));
+        tmp.put((int) 'S', quota.get((int) 'S'));
+        tmp.put((int) 'G', quota.get((int) 'G'));
 
-        int sum = 0;
-        for (int i = start; i <= end; i++) {
-            sum += menu.get(i).get(0);
+        Integer currMenuType = menu.get(start).get(1);
+        if (tmp.get(currMenuType) == 1 && start != end && currMenuType == menu.get(end).get(1)) {
+            tmp.put(-1, (end + 1 - start) * promoCost.get(currMenuType));
+            tmp.put(currMenuType, tmp.get(currMenuType) - 1); // update quota
+        } else {
+            tmp.put(-1, pref[end] - (start > 0 ? pref[start - 1] : 0)); // sum harga menu dari start hingga end
         }
-        return sum;
+        return tmp;
     }
 
     // taken from https://codeforces.com/submissions/Petr
