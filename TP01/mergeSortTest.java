@@ -6,9 +6,9 @@ public class mergeSortTest {
     private static PrintWriter out;
 
     private static HashMap<Integer, ArrayList<Integer>> koki = new HashMap<>();
-    private static ArrayList<Integer> kokiA = new ArrayList<>();
-    private static ArrayList<Integer> kokiS = new ArrayList<>();
-    private static ArrayList<Integer> kokiG = new ArrayList<>();
+    private static TreeSet<Integer> kokiA = new TreeSet<>();
+    private static TreeSet<Integer> kokiS = new TreeSet<>();
+    private static TreeSet<Integer> kokiG = new TreeSet<>();
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -18,9 +18,8 @@ public class mergeSortTest {
 
         int V = in.nextInt(); // jumlah koki
         for (int i = 1; i <= V; i++) {
-            ArrayList<Integer> tmp = new ArrayList<>();
-
             String S = in.next(); // spesialis
+            Koki tmp = new Koki(i, S);
 
             if (S.equals("A")) {
                 kokiA.add(i);
@@ -30,23 +29,26 @@ public class mergeSortTest {
                 kokiG.add(i);
             }
 
-            tmp.add((int) S.charAt(0));
-            tmp.add(0); // jumlah pelayanan koki
-
-            koki.put(i, tmp);
+            // koki.put(i, tmp);
         }
 
-        ArrayList<Integer> test = new ArrayList<>();
-        test.add(1);
-        test.add(3);
-        test.add(2);
-        test.add(5);
-        test.add(4);
+        out.println(kokiA);
+        out.println(kokiS);
+        out.println(kokiG);
 
-        // implement a merge sort
-        sortKoki(test, 0, test.size() - 1);
+        // out.println(kokiT);
 
-        out.println(test);
+        // ArrayList<Integer> test = new ArrayList<>();
+        // test.add(1);
+        // test.add(3);
+        // test.add(2);
+        // test.add(5);
+        // test.add(4);
+
+        // // implement a merge sort
+        // sortKoki(test, 0, test.size() - 1);
+
+        // out.println(test);
 
         out.close();
     }
@@ -64,7 +66,7 @@ public class mergeSortTest {
 
     private static void sortKokiMerger(ArrayList<Integer> arr, int l, int m, int r) {
         // ide dari https://www.geeksforgeeks.org/merge-sort/
-        
+
         int n1 = m - l + 1;
         int n2 = r - m;
 
@@ -111,6 +113,35 @@ public class mergeSortTest {
             arr.set(k, R.get(j));
             j++;
             k++;
+        }
+    }
+
+    static class Koki implements Comparable<Koki> {
+        int id;
+        String spesialis;
+        int jumlah_pelanggan = 0;
+
+        public Koki(int id, String spesialis) {
+            this.id = id;
+            this.spesialis = spesialis;
+        }
+
+        @Override
+        public int compareTo(Koki o) {
+            // TODO Auto-generated method stub
+            if (this.jumlah_pelanggan == o.jumlah_pelanggan) {
+                return o.spesialis.compareTo(this.spesialis);
+            }
+            return this.jumlah_pelanggan - o.jumlah_pelanggan;
+        }
+
+        public void addJumlahPelanggan(int n) {
+            this.jumlah_pelanggan += n;
+        }
+
+        @Override
+        public String toString() {
+            return "Koki [id=" + id + ", jumlah_pelanggan=" + jumlah_pelanggan + ", spesialis=" + spesialis + "]";
         }
     }
 
