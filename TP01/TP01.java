@@ -23,8 +23,9 @@ public class TP01 {
     private static boolean[] pelangganBlackList;
     private static ArrayDeque<Integer> rLapar = new ArrayDeque<>();
     private static ArrayDeque<Pesanan> pesanan = new ArrayDeque<>();
-    private static HashMap<String, Integer> promoCost = new HashMap<>();
-    private static long[] memoryD;
+    // private static HashMap<String, Integer> promoCost = new HashMap<>();
+    private static int ApromoCost, GpromoCost, SpromoCost;
+    private static long[][][][] memoryD;
     private static int[] prefD;
     private static int[] prefAS;
 
@@ -76,7 +77,7 @@ public class TP01 {
         int N = in.nextInt(); // banyaknya kursi
         kapasitasMeja = N;
 
-        memoryD = new long[M]; // inisialisasi array untuk Memorization
+        memoryD = new long[M][2][2][2]; // inisialisasi array untuk Memorization
 
         prefD = new int[M]; // inisialisasi array untuk Prefix Sum commad D
         for (int i = 0; i < M; i++) {
@@ -107,7 +108,7 @@ public class TP01 {
             int X = in.nextInt(); // jumlah pelayanan
             for (int j = 0; j < X; j++) {
                 String command = in.next();
-                int firstParam, secondParam, thirdParam;
+                int firstParam, secondParam;
                 if (command.equals("P")) {
                     firstParam = in.nextInt();
                     secondParam = in.nextInt();
@@ -121,28 +122,32 @@ public class TP01 {
                     firstParam = in.nextInt();
                     commandC(firstParam);
                 } else if (command.equals("D")) {
-                    firstParam = in.nextInt();
-                    secondParam = in.nextInt();
-                    thirdParam = in.nextInt();
+                    ApromoCost = in.nextInt();
+                    GpromoCost = in.nextInt();
+                    SpromoCost = in.nextInt();
 
-                    promoCost.put("A", firstParam);
-                    promoCost.put("G", secondParam);
-                    promoCost.put("S", thirdParam);
+                    // promoCost.put("A", firstParam);
+                    // promoCost.put("G", secondParam);
+                    // promoCost.put("S", thirdParam);
 
-                    Arrays.fill(memoryD, -1); // reset array untuk Memorization
-
-                    HashMap<String, Integer> quota = new HashMap<>();
-                    quota.put("A", 1);
-                    quota.put("G", 1);
-                    quota.put("S", 1);
-
-                    out.println(commandD(0, M - 1, quota));
+                    for (int k = 0; k < M; k++) {
+                        for (int l = 0; l < 2; l++) {
+                            for (int m = 0; m < 2; m++) {
+                                for (int n = 0; n < 2; n++) {
+                                    memoryD[k][l][m][n] = -1;
+                                }
+                            }
+                        }
+                    }
+                    // Arrays.fill(memoryD, -1); // reset array untuk Memorization
+                    out.println(commandD(0, M - 1, 1, 1, 1));
                 }
             }
             // pelangganIn.clear();
             kapasitasMeja = N;
             rLapar.clear();
             pesanan.clear();
+            riwayatIdPelanggan.clear();
         }
         // out.println(menu);
         // out.println(pesanan);
@@ -230,9 +235,9 @@ public class TP01 {
         // totalPrice += menu.get(idxMakanan).get(0);
         // }
         // pelangganIn.remove((Integer) idPelanggan);
-        kapasitasMeja--;
+        kapasitasMeja++;
         if (!rLapar.isEmpty()) {
-            kapasitasMeja++;
+            kapasitasMeja--;
             rLapar.poll();
         }
         if (currPelanggan.totalCost > currPelanggan.uang) {
@@ -254,8 +259,7 @@ public class TP01 {
         out.println();
     }
 
-    public static long commandD(int start, int end, HashMap<String, Integer> quota) {
-        // out.println("Quota: " + quota);
+    public static long commandD(int start, int end, int AQuota, int GQuota, int SQuota) {
         // base case
         if (start == end)
             return menu[start].harga;
@@ -263,49 +267,44 @@ public class TP01 {
             return 0;
 
         // Memorization
-        if (memoryD[start] != -1)
-            return memoryD[start];
+        if (memoryD[start][AQuota][GQuota][SQuota] != -1)
+            return memoryD[start][AQuota][GQuota][SQuota];
 
         // recursion case
         long minCost = Long.MAX_VALUE;
         for (int i = start; i <= end; i++) {
-            String currMenuType = menu[start].tipe;
-            // long currTotalCost;
-            // if (quota.get(currMenuType) == 1 && start != i &&
-            // currMenuType.equals(menu.get(i).tipe)) {
-            // currTotalCost = (i + 1 - start) * promoCost.get(currMenuType);
-            // quota.put(currMenuType, 0);
-            // } else {
-            // currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0);
-            // }
-            // long tmp = calcD(start, i, quota);
-            long sum = calcD(start, i, quota) + commandD(i + 1, end, quota);
-            quota.put(currMenuType, 1); // reset quota
+            long[] tmp = calcD(start, i, AQuota, GQuota, SQuota);
+            long sum = tmp[0] + commandD(i + 1, end, (int) tmp[1], (int) tmp[2], (int) tmp[3]);
+            // quota.put(currMenuType, 1); // reset quota
             minCost = Math.min(minCost, sum);
         }
 
         // store to memory and return minCost
-        return memoryD[start] = minCost; // harga min untuk beli seluruh menu makanan
+        return memoryD[start][AQuota][GQuota][SQuota] = minCost; // harga min untuk beli seluruh menu makanan
     }
 
-    // public static int calcD(int start, int end) {
-    // String currMenuType = menu.get(start).tipe;
-    // if (start != end && currMenuType.equals(menu.get(end).tipe)) {
-    // return (end + 1 - start) * promoCost.get(currMenuType);
-    // }
-    // return prefD[end] - (start > 0 ? prefD[start - 1] : 0); // sum harga menu
-    // dari start hingga end
-    // }
-    public static long calcD(int start, int end, HashMap<String, Integer> quota) {
+    public static long[] calcD(int start, int end, long AQuota, long GQuota, long SQuota) {
         String currMenuType = menu[start].tipe;
-        long currTotalCost;
-        if (quota.get(currMenuType) == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
-            currTotalCost = (end + 1 - start) * promoCost.get(currMenuType);
-            quota.put(currMenuType, 0);
+        long currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0); // sum harga menu dari start hingga end
+
+        if (currMenuType.equals("A")) {
+            if (AQuota == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
+                currTotalCost = (end + 1 - start) * ApromoCost;
+                AQuota = 0;
+            }
+        } else if (currMenuType.equals("G")) {
+            if (GQuota == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
+                currTotalCost = (end + 1 - start) * GpromoCost;
+                GQuota = 0;
+            }
         } else {
-            currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0); // sum harga menu dari start hingga end
+            if (SQuota == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
+                currTotalCost = (end + 1 - start) * SpromoCost;
+                SQuota = 0;
+            }
         }
-        return currTotalCost;
+
+        return new long[] { currTotalCost, AQuota, GQuota, SQuota };
     }
 
     // taken from https://codeforces.com/submissions/Petr
