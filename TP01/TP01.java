@@ -24,7 +24,8 @@ public class TP01 {
     private static HashMap<Integer, ArrayList<Integer>> pesananPelanggan = new HashMap<>();
     private static HashMap<Integer, Integer> promoCost = new HashMap<>();
     private static int[] memoryD;
-    public static int[] pref;
+    public static int[] prefD;
+    public static int[] prefAS;
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -68,31 +69,36 @@ public class TP01 {
         int P = in.nextInt(); // banyaknya pelanggan
         int N = in.nextInt(); // banyaknya kursi
 
-        int Y = in.nextInt(); // jumlah hari beroperasi
         memoryD = new int[M]; // inisialisasi array untuk Memorization
 
-        pref = new int[M]; // inisialisasi array untuk Prefix Sum
+        prefD = new int[M]; // inisialisasi array untuk Prefix Sum commad D
         for (int i = 0; i < M; i++) {
-            pref[i] = (i > 0 ? pref[i - 1] : 0) + menu.get(i).get(0);
+            prefD[i] = (i > 0 ? prefD[i - 1] : 0) + menu.get(i).get(0);
         }
-        for (int i = 0; i < pref.length; i++) {
-            out.print(pref[i] + " ");
-        }
-        out.println();
+        // for (int i = 0; i < pref.length; i++) {
+        // out.print(pref[i] + " ");
+        // }
+        // out.println();
 
+        int Y = in.nextInt(); // jumlah hari beroperasi
         for (int i = 0; i < Y; i++) {
             int Pi = in.nextInt(); // jumlah pelanggan yang datang pada hari ke-i
+            prefAS = new int[Pi]; // inisialisasi array untuk Prefix Sum Advance Scanning
             for (int j = 0; j < Pi; j++) {
-
                 int I = in.nextInt(); // id
                 String K = in.next(); // kesehatan
                 int U = in.nextInt(); // uang
 
                 out.print(handleCustomer(j, N, I, K, U) + " ");
+
+                // update pref advance scanning
+                prefAS[j] = (j > 0 ? prefAS[j - 1] : 0)
+                        + (pelanggan.get(riwayatIdPelanggan.get(j)).get(0) == '+' ? 1 : 0);
             }
             out.println();
+
             int X = in.nextInt(); // jumlah pelayanan
-            for (int k = 0; k < X; k++) {
+            for (int j = 0; j < X; j++) {
                 String command = in.next();
                 int firstParam, secondParam, thirdParam;
                 if (command.equals("P")) {
@@ -133,21 +139,14 @@ public class TP01 {
     }
 
     public static boolean advanceScan(int j, int R) {
-        int countPos = 0;
-        for (int i = j - R; i < j; i++) {
-            if (pelanggan.get(riwayatIdPelanggan.get(i)).get(0) == '+') {
-                countPos++;
-            }
-        }
+        int start = j - R;
+        int end = j;
+        int countPos = prefAS[end] - (start > 0 ? prefAS[start - 1] : 0);
         return countPos > (R / 2);
     }
 
     public static int handleCustomer(int j, int N, int I, String K, int U) {
         ArrayList<Integer> tmp = new ArrayList<Integer>();
-
-        if (pelangganBlackList.contains(I)) {
-            return 3;
-        }
 
         if (K.equals("?")) {
             int R = in.nextInt(); // range advance scanning
@@ -159,6 +158,10 @@ public class TP01 {
 
         pelanggan.put(I, tmp);
         riwayatIdPelanggan.add(I);
+
+        if (pelangganBlackList.contains(I)) {
+            return 3;
+        }
 
         if (K.equals("+")) {
             return 0;
@@ -276,23 +279,6 @@ public class TP01 {
         }
     }
 
-    // public static void sortKoki(ArrayList<Integer> kokiSList) {
-    // // menggunakan selection sort untuk sorting koki
-    // // berdasarkan jumlah pelayanan dan id
-    // for (int i = 0; i < kokiSList.size(); i++) {
-    // for (int j = i + 1; j < kokiSList.size(); j++) {
-    // int idKoki1 = kokiSList.get(i);
-    // int idKoki2 = kokiSList.get(j);
-    // if (koki.get(idKoki1).get(1) > koki.get(idKoki2).get(1)
-    // || (koki.get(idKoki1).get(1) == koki.get(idKoki2).get(1) && idKoki1 >
-    // idKoki2)) {
-    // kokiSList.set(i, idKoki2);
-    // kokiSList.set(j, idKoki1);
-    // }
-    // }
-    // }
-    // }
-
     public static int commandL() {
         ArrayList<Integer> currPesanan = pesanan.poll();
         ArrayList<Integer> assignedKoki = koki.get(currPesanan.get(2));
@@ -367,7 +353,7 @@ public class TP01 {
             tmp.put(-1, (end + 1 - start) * promoCost.get(currMenuType));
             tmp.put(currMenuType, tmp.get(currMenuType) - 1); // update quota
         } else {
-            tmp.put(-1, pref[end] - (start > 0 ? pref[start - 1] : 0)); // sum harga menu dari start hingga end
+            tmp.put(-1, prefD[end] - (start > 0 ? prefD[start - 1] : 0)); // sum harga menu dari start hingga end
         }
         return tmp;
     }
@@ -401,5 +387,45 @@ public class TP01 {
             return Integer.parseInt(next());
         }
 
+    }
+}
+
+class Koki implements Comparable<Koki> {
+    String S;
+    int jumlah_pelanggan = 0;
+
+    public Koki(String S, int jumlah_pelanggan) {
+        this.S = S;
+        this.jumlah_pelanggan = jumlah_pelanggan;
+    }
+
+    @Override
+    public int compareTo(Koki o) {
+        // TODO Auto-generated method stub
+        if (this.jumlah_pelanggan == o.jumlah_pelanggan) {
+            return o.S.compareTo(this.S);
+        }
+        return this.jumlah_pelanggan - o.jumlah_pelanggan;
+    }
+
+    public void addJumlahPelanggan(int n) {
+        this.jumlah_pelanggan += n;
+    }
+}
+
+class Pelanggan {
+    int I;
+    int K;
+    int U;
+    int total_cost = 0;
+
+    public Pelanggan(int I, int K, int U) {
+        this.I = I;
+        this.K = K;
+        this.U = U;
+    }
+
+    public void addTotalCost(int total_cost) {
+        this.total_cost += total_cost;
     }
 }
