@@ -155,8 +155,8 @@ public class TP01 {
     }
 
     public static boolean advanceScan(int j, int R) {
-        int start = j - R;
-        int end = j;
+        int start = j - R > 0 ? j - R - 1 : 0;
+        int end = j - 1;
         int countPos = prefAS[end] - (start > 0 ? prefAS[start - 1] : 0);
         return countPos > (R / 2);
     }
@@ -264,15 +264,16 @@ public class TP01 {
         long minCost = Long.MAX_VALUE;
         for (int i = start; i <= end; i++) {
             String currMenuType = menu.get(start).tipe;
-            long currTotalCost;
-            if (quota.get(currMenuType) == 1 && start != i && currMenuType.equals(menu.get(i).tipe)) {
-                currTotalCost = (i + 1 - start) * promoCost.get(currMenuType);
-                quota.put(currMenuType, 0);
-            } else {
-                currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0);
-            }
+            // long currTotalCost;
+            // if (quota.get(currMenuType) == 1 && start != i &&
+            // currMenuType.equals(menu.get(i).tipe)) {
+            // currTotalCost = (i + 1 - start) * promoCost.get(currMenuType);
+            // quota.put(currMenuType, 0);
+            // } else {
+            // currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0);
+            // }
             // long tmp = calcD(start, i, quota);
-            long sum = currTotalCost + commandD(i + 1, end, quota);
+            long sum = calcD(start, i, quota) + commandD(i + 1, end, quota);
             quota.put(currMenuType, 1); // reset quota
             minCost = Math.min(minCost, sum);
         }
@@ -289,20 +290,17 @@ public class TP01 {
     // return prefD[end] - (start > 0 ? prefD[start - 1] : 0); // sum harga menu
     // dari start hingga end
     // }
-    // public static long calcD(int start, int end, HashMap<String, Integer> quota)
-    // {
-    // String currMenuType = menu.get(start).tipe;
-    // long currTotalCost;
-    // if (quota.get(currMenuType) == 1 && start != end &&
-    // currMenuType.equals(menu.get(end).tipe)) {
-    // currTotalCost = (end + 1 - start) * promoCost.get(currMenuType);
-    // quota.put(currMenuType, 0);
-    // } else {
-    // currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0); // sum harga
-    // menu dari start hingga end
-    // }
-    // return currTotalCost;
-    // }
+    public static long calcD(int start, int end, HashMap<String, Integer> quota) {
+        String currMenuType = menu.get(start).tipe;
+        long currTotalCost;
+        if (quota.get(currMenuType) == 1 && start != end && currMenuType.equals(menu.get(end).tipe)) {
+            currTotalCost = (end + 1 - start) * promoCost.get(currMenuType);
+            quota.put(currMenuType, 0);
+        } else {
+            currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0); // sum harga menu dari start hingga end
+        }
+        return currTotalCost;
+    }
 
     // taken from https://codeforces.com/submissions/Petr
     // together with PrintWriter, these input-output (IO) is much faster than the
