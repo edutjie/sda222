@@ -11,19 +11,18 @@ public class TP01 {
     private static InputReader in;
     private static PrintWriter out;
 
-    private static ArrayList<Menu> menu = new ArrayList<>();
+    private static Menu[] menu;
     // private static HashMap<Integer, Koki> koki = new HashMap<>();
     private static TreeSet<Koki> kokiA = new TreeSet<>();
     private static TreeSet<Koki> kokiS = new TreeSet<>();
     private static TreeSet<Koki> kokiG = new TreeSet<>();
-    private static HashMap<Integer, Pelanggan> pelanggan = new HashMap<>();
+    private static Pelanggan[] pelanggan;
     private static ArrayList<Integer> riwayatIdPelanggan = new ArrayList<>();
-    private static ArrayList<Integer> pelangganIn = new ArrayList<>();
-    private static ArrayDeque<Integer> pelangganBlackList = new ArrayDeque<>();
+    // private static ArrayList<Integer> pelangganIn = new ArrayList<>();
+    private static int kapasitasMeja;
+    private static boolean[] pelangganBlackList;
     private static ArrayDeque<Integer> rLapar = new ArrayDeque<>();
     private static ArrayDeque<Pesanan> pesanan = new ArrayDeque<>();
-    // private static HashMap<Integer, ArrayList<Integer>> pesananPelanggan = new
-    // HashMap<>();
     private static HashMap<String, Integer> promoCost = new HashMap<>();
     private static long[] memoryD;
     private static int[] prefD;
@@ -36,6 +35,7 @@ public class TP01 {
         out = new PrintWriter(outputStream);
 
         int M = in.nextInt(); // jumlah makanan di menu
+        menu = new Menu[M];
         for (int i = 0; i < M; i++) {
 
             int h = in.nextInt(); // harga
@@ -45,7 +45,7 @@ public class TP01 {
             // tmp.add((int) t.charAt(0));
 
             Menu tmp = new Menu(h, t);
-            menu.add(tmp);
+            menu[i] = tmp;
         }
 
         int V = in.nextInt(); // jumlah koki
@@ -70,15 +70,17 @@ public class TP01 {
         }
 
         int P = in.nextInt(); // banyaknya pelanggan
-        // pelanggan = new Pelanggan[P];
+        pelanggan = new Pelanggan[P];
+        pelangganBlackList = new boolean[P];
 
         int N = in.nextInt(); // banyaknya kursi
+        kapasitasMeja = N;
 
         memoryD = new long[M]; // inisialisasi array untuk Memorization
 
         prefD = new int[M]; // inisialisasi array untuk Prefix Sum commad D
         for (int i = 0; i < M; i++) {
-            prefD[i] = (i > 0 ? prefD[i - 1] : 0) + menu.get(i).harga;
+            prefD[i] = (i > 0 ? prefD[i - 1] : 0) + menu[i].harga;
         }
         // for (int i = 0; i < pref.length; i++) {
         // out.print(pref[i] + " ");
@@ -98,7 +100,7 @@ public class TP01 {
 
                 // update pref advance scanning
                 prefAS[j] = (j > 0 ? prefAS[j - 1] : 0)
-                        + (pelanggan.get(riwayatIdPelanggan.get(j)).kesehatan.equals("+") ? 1 : 0);
+                        + (pelanggan[riwayatIdPelanggan.get(j) - 1].kesehatan.equals("+") ? 1 : 0);
             }
             out.println();
 
@@ -137,7 +139,8 @@ public class TP01 {
                     out.println(commandD(0, M - 1, quota));
                 }
             }
-            pelangganIn.clear();
+            // pelangganIn.clear();
+            kapasitasMeja = N;
             rLapar.clear();
             pesanan.clear();
         }
@@ -155,9 +158,10 @@ public class TP01 {
     }
 
     public static boolean advanceScan(int j, int R) {
-        int start = j - R > 0 ? j - R - 1 : 0;
+        int start = j - R;
         int end = j - 1;
         int countPos = prefAS[end] - (start > 0 ? prefAS[start - 1] : 0);
+        // out.print("COUNT POS: " + countPos + " ");
         return countPos > (R / 2);
     }
 
@@ -167,15 +171,15 @@ public class TP01 {
             int R = in.nextInt(); // range advance scanning
             K = advanceScan(j, R) ? "+" : "-";
         }
-
+        // out.print("KESEHATAN PELANGGAN " + I + ": " + K + ", ");
         Pelanggan tmp = new Pelanggan(I, K, U);
         // tmp.add((int) K.charAt(0));
         // tmp.add(U);
 
-        pelanggan.put(I, tmp);
+        pelanggan[I - 1] = tmp;
         riwayatIdPelanggan.add(I);
 
-        if (pelangganBlackList.contains(I)) {
+        if (pelangganBlackList[I - 1]) {
             return 3;
         }
 
@@ -183,19 +187,19 @@ public class TP01 {
             return 0;
         }
 
-        if (pelangganIn.size() >= N) {
+        if (kapasitasMeja == 0) {
             rLapar.add(I);
             return 2;
         }
 
-        pelangganIn.add(I);
+        // pelangganIn.add(I);
+        kapasitasMeja--;
         return 1;
     }
 
     public static int commandP(int idPelanggan, int idxMakanan) {
-        idxMakanan -= 1;
-        Pelanggan p = pelanggan.get(idPelanggan);
-        Menu m = menu.get(idxMakanan);
+        Pelanggan p = pelanggan[idPelanggan - 1];
+        Menu m = menu[idxMakanan - 1];
         Pesanan tmp = new Pesanan(p, m);
 
         pesanan.add(tmp); // append pesanan (idPelanggan, idxMakanan, idKoki)
@@ -220,16 +224,19 @@ public class TP01 {
     }
 
     public static int commandB(int idPelanggan) {
-        Pelanggan currPelanggan = pelanggan.get(idPelanggan);
+        Pelanggan currPelanggan = pelanggan[idPelanggan - 1];
         // int totalPrice = 0;
         // for (int idxMakanan : pesananPelanggan.get(idPelanggan)) {
         // totalPrice += menu.get(idxMakanan).get(0);
         // }
-        pelangganIn.remove((Integer) idPelanggan);
-        if (!rLapar.isEmpty())
-            pelangganIn.add(rLapar.poll());
-        if (currPelanggan.total_cost > currPelanggan.uang) {
-            pelangganBlackList.add(idPelanggan);
+        // pelangganIn.remove((Integer) idPelanggan);
+        kapasitasMeja--;
+        if (!rLapar.isEmpty()) {
+            kapasitasMeja++;
+            rLapar.poll();
+        }
+        if (currPelanggan.totalCost > currPelanggan.uang) {
+            pelangganBlackList[idPelanggan - 1] = true;
             return 0;
         }
         return 1; // 1 if cukup, 0 if tidak cukup
@@ -245,14 +252,13 @@ public class TP01 {
             out.print(allKoki.pollFirst().id + " "); // idKoki Q teratas
         }
         out.println();
-        // out.println(kokiIdList);
     }
 
     public static long commandD(int start, int end, HashMap<String, Integer> quota) {
         // out.println("Quota: " + quota);
         // base case
         if (start == end)
-            return menu.get(start).harga;
+            return menu[start].harga;
         if (start > end)
             return 0;
 
@@ -263,7 +269,7 @@ public class TP01 {
         // recursion case
         long minCost = Long.MAX_VALUE;
         for (int i = start; i <= end; i++) {
-            String currMenuType = menu.get(start).tipe;
+            String currMenuType = menu[start].tipe;
             // long currTotalCost;
             // if (quota.get(currMenuType) == 1 && start != i &&
             // currMenuType.equals(menu.get(i).tipe)) {
@@ -291,9 +297,9 @@ public class TP01 {
     // dari start hingga end
     // }
     public static long calcD(int start, int end, HashMap<String, Integer> quota) {
-        String currMenuType = menu.get(start).tipe;
+        String currMenuType = menu[start].tipe;
         long currTotalCost;
-        if (quota.get(currMenuType) == 1 && start != end && currMenuType.equals(menu.get(end).tipe)) {
+        if (quota.get(currMenuType) == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
             currTotalCost = (end + 1 - start) * promoCost.get(currMenuType);
             quota.put(currMenuType, 0);
         } else {
@@ -336,7 +342,7 @@ public class TP01 {
     static class Koki implements Comparable<Koki> {
         int id;
         String spesialis;
-        int jumlah_pelanggan = 0;
+        int jumlahPelanggan = 0;
 
         public Koki(int id, String spesialis) {
             this.id = id;
@@ -346,17 +352,17 @@ public class TP01 {
         @Override
         public int compareTo(Koki o) {
             // TODO Auto-generated method stub
-            if (this.jumlah_pelanggan == o.jumlah_pelanggan) {
+            if (this.jumlahPelanggan == o.jumlahPelanggan) {
                 if (o.spesialis.equals(this.spesialis)) {
                     return this.id - o.id;
                 }
                 return o.spesialis.compareTo(this.spesialis);
             }
-            return this.jumlah_pelanggan - o.jumlah_pelanggan;
+            return this.jumlahPelanggan - o.jumlahPelanggan;
         }
 
         public void addJumlahPelanggan(int n) {
-            this.jumlah_pelanggan += n;
+            this.jumlahPelanggan += n;
         }
 
         public boolean equals(Koki o) {
@@ -365,7 +371,7 @@ public class TP01 {
 
         @Override
         public String toString() {
-            return "Koki [id=" + id + ", jumlah_pelanggan=" + jumlah_pelanggan + ", spesialis=" + spesialis + "]";
+            return "Koki [id=" + id + ", jumlah_pelanggan=" + jumlahPelanggan + ", spesialis=" + spesialis + "]";
         }
     }
 
@@ -373,7 +379,7 @@ public class TP01 {
         int id;
         String kesehatan;
         int uang;
-        int total_cost = 0;
+        int totalCost = 0;
 
         public Pelanggan(int id, String kesehatan, int uang) {
             this.id = id;
@@ -381,8 +387,14 @@ public class TP01 {
             this.uang = uang;
         }
 
-        public void addTotalCost(int total_cost) {
-            this.total_cost += total_cost;
+        public void addTotalCost(int totalCost) {
+            this.totalCost += totalCost;
+        }
+
+        @Override
+        public String toString() {
+            return "Pelanggan [id=" + id + ", kesehatan=" + kesehatan + ", totalCost=" + totalCost + ", uang=" + uang
+                    + "]";
         }
     }
 
