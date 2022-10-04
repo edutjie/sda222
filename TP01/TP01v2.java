@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
-public class TP01 {
+public class TP01v2 {
     // TODO : Silahkan menambahkan struktur data yang diperlukan
     private static InputReader in;
     private static PrintWriter out;
@@ -21,7 +21,7 @@ public class TP01 {
     // private static ArrayList<Integer> pelangganIn = new ArrayList<>();
     private static int kapasitasMeja;
     private static boolean[] pelangganBlackList;
-    // private static ArrayDeque<Integer> rLapar = new ArrayDeque<>();
+    private static ArrayDeque<Integer> rLapar = new ArrayDeque<>();
     private static ArrayDeque<Pesanan> pesanan = new ArrayDeque<>();
     // private static HashMap<String, Integer> promoCost = new HashMap<>();
     private static int ApromoCost, GpromoCost, SpromoCost;
@@ -141,13 +141,12 @@ public class TP01 {
                     }
                     memoryD[0][0][0][0] = 0;
                     // Arrays.fill(memoryD, -1); // reset array untuk Memorization
-                    // out.println(commandD(0, M - 1, 1, 1, 1));
                     out.println(commandD(0, M));
                 }
             }
             // pelangganIn.clear();
             kapasitasMeja = N;
-            // rLapar.clear();
+            rLapar.clear();
             pesanan.clear();
             riwayatIdPelanggan.clear();
         }
@@ -193,15 +192,14 @@ public class TP01 {
         if (K.equals("+")) {
             return 0;
         }
-        
-        if (kapasitasMeja <= 0) {
-            // rLapar.add(I);
-            kapasitasMeja--;
+
+        if (kapasitasMeja == 0) {
+            rLapar.add(I);
             return 2;
         }
-        
-        kapasitasMeja--;
+
         // pelangganIn.add(I);
+        kapasitasMeja--;
         return 1;
     }
 
@@ -239,10 +237,10 @@ public class TP01 {
         // }
         // pelangganIn.remove((Integer) idPelanggan);
         kapasitasMeja++;
-        // if (!rLapar.isEmpty()) {
-        //     kapasitasMeja--;
-        //     rLapar.poll();
-        // }
+        if (!rLapar.isEmpty()) {
+            kapasitasMeja--;
+            rLapar.poll();
+        }
         if (currPelanggan.totalCost > currPelanggan.uang) {
             pelangganBlackList[idPelanggan - 1] = true;
             return 0;
@@ -314,6 +312,7 @@ public class TP01 {
 
     // return new long[] { currTotalCost, AQuota, GQuota, SQuota };
     // }
+
     public static long commandD(int start, int end) {
         for (int i = 1; i <= end; i++) {
             for (int A = 0; A < 3; A++) {
@@ -474,7 +473,7 @@ public class TP01 {
         }
 
         // get the minimun
-        long min = 50000000000L;
+        long min = Long.MAX_VALUE;
         for (int A = 0; A < 3; A += 2) {
             for (int G = 0; G < 3; G += 2) {
                 for (int S = 0; S < 3; S += 2) {
@@ -484,8 +483,45 @@ public class TP01 {
             }
         }
 
+        // for (int i = 1; i <= end; i++) {
+        // for (int A = 0; A < 3; A++) {
+        // for (int G = 0; G < 3; G++) {
+        // for (int S = 0; S < 3; S++) {
+        // out.print(i + " " + A + " " + G + " " + S + ": ");
+        // out.println(memoryD[i][A][G][S]);
+        // }
+        // }
+        // }
+        // }
+
         return min;
     }
+
+    // public static long commandD(int start, int end, int A, int G, int S) {
+    // // base case
+    // if (start == end)
+    // return menu[start].harga;
+    // if (start > end)
+    // return 0;
+
+    // // Memorization
+    // if (memoryD[start][A][G][S] != -1)
+    // return memoryD[start][A][G][S];
+
+    // long minCost = Long.MAX_VALUE;
+    // if (menu[start].tipe.equals("A")) {
+    // if (A == 2 || S == 1 || G == 1) {
+    // minCost = Math.min(minCost, commandD(start + 1, end, A, G, S) +
+    // menu[start].harga);
+    // } else if (A == 1) {
+    // // minCost = (end + 1 - start) * ApromoCost;
+    // minCost = Math.min(minCost, commandD(start + 1, end, A + 1, G, S) +
+    // ApromoCost);
+    // }
+    // }
+
+    // return 0;
+    // }
 
     // taken from https://codeforces.com/submissions/Petr
     // together with PrintWriter, these input-output (IO) is much faster than the
