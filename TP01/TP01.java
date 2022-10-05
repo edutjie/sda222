@@ -103,6 +103,7 @@ public class TP01 {
                     GpromoCost = in.nextInt();
                     SpromoCost = in.nextInt();
 
+                    // fill memoryD with max value possible
                     for (int k = 0; k <= M; k++) {
                         for (int l = 0; l < 3; l++) {
                             for (int m = 0; m < 3; m++) {
@@ -123,7 +124,11 @@ public class TP01 {
     public static boolean advanceScan(int j, int R) {
         int start = j - R;
         int end = j - 1;
+
+        // get sum positive pelanggan using prefix sum
         int countPos = prefAS[end] - (start > 0 ? prefAS[start - 1] : 0);
+
+        // return apakah jumlah pelanggan yang positif lebih banyak dari yang negatif pada range R
         return countPos > (R / 2);
     }
 
@@ -145,20 +150,24 @@ public class TP01 {
             prefAS[j] = j > 0 ? prefAS[j - 1] : 0;
         }
 
+        // check if pelanggan is blacklisted
         if (pelangganBlackList[I - 1]) {
             return 3;
         }
 
+        // cek apakah pelanggan positif
         if (K.equals("+")) {
             return 0;
         }
 
         jumlahPelangganIn++;
 
+        // cek kepadatan
         if (jumlahPelangganIn > N) {
             return 2;
         }
 
+        // jika aman
         return 1;
     }
 
@@ -174,9 +183,11 @@ public class TP01 {
     }
 
     public static int commandL() {
-        Pesanan currPesanan = pesanan.poll();
+        // get the first el in pesanan and remove it
+        Pesanan currPesanan = pesanan.poll(); 
         Koki assignedKoki = currPesanan.koki;
         if (assignedKoki.spesialis.equals("A")) {
+            // remove and add again to update the sorting
             kokiA.remove(assignedKoki);
             assignedKoki.addJumlahPelanggan(1);
             kokiA.add(assignedKoki);
@@ -204,6 +215,7 @@ public class TP01 {
 
     public static void commandC(int Q) {
         TreeSet<Koki> allKoki = new TreeSet<>();
+        // add all koki to allKoki
         allKoki.addAll(kokiA);
         allKoki.addAll(kokiS);
         allKoki.addAll(kokiG);
