@@ -19,7 +19,6 @@ public class TP01 {
     private static ArrayDeque<Pesanan> pesanan = new ArrayDeque<>();
     private static int ApromoCost, GpromoCost, SpromoCost;
     private static long[][][][] memoryD;
-    private static int[] prefD;
     private static int[] prefAS;
 
     public static void main(String[] args) {
@@ -60,11 +59,6 @@ public class TP01 {
         int N = in.nextInt(); // banyaknya kursi
 
         memoryD = new long[M + 1][3][3][3]; // inisialisasi array untuk Memorization
-
-        prefD = new int[M]; // inisialisasi array untuk Prefix Sum commad D
-        for (int i = 0; i < M; i++) {
-            prefD[i] = (i > 0 ? prefD[i - 1] : 0) + menu[i].harga;
-        }
 
         int Y = in.nextInt(); // jumlah hari beroperasi
         for (int i = 0; i < Y; i++) {
