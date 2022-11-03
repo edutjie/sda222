@@ -1,24 +1,32 @@
 import java.io.*;
 import java.util.ArrayDeque;
-// import java.util.ArrayList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
-public class TP01 {
+public class TP01v2 {
     // TODO : Silahkan menambahkan struktur data yang diperlukan
     private static InputReader in;
     private static PrintWriter out;
 
     private static Menu[] menu;
+    // private static HashMap<Integer, Koki> koki = new HashMap<>();
     private static TreeSet<Koki> kokiA = new TreeSet<>();
     private static TreeSet<Koki> kokiS = new TreeSet<>();
     private static TreeSet<Koki> kokiG = new TreeSet<>();
     private static Pelanggan[] pelanggan;
-    private static int jumlahPelangganIn = 0;
+    private static ArrayList<Integer> riwayatIdPelanggan = new ArrayList<>();
+    // private static ArrayList<Integer> pelangganIn = new ArrayList<>();
+    private static int kapasitasMeja;
     private static boolean[] pelangganBlackList;
+    private static ArrayDeque<Integer> rLapar = new ArrayDeque<>();
     private static ArrayDeque<Pesanan> pesanan = new ArrayDeque<>();
+    // private static HashMap<String, Integer> promoCost = new HashMap<>();
     private static int ApromoCost, GpromoCost, SpromoCost;
     private static long[][][][] memoryD;
+    private static int[] prefD;
     private static int[] prefAS;
 
     public static void main(String[] args) {
@@ -30,9 +38,12 @@ public class TP01 {
         int M = in.nextInt(); // jumlah makanan di menu
         menu = new Menu[M];
         for (int i = 0; i < M; i++) {
+
             int h = in.nextInt(); // harga
+            // tmp.add(h);
 
             String t = in.next(); // tipe makanan
+            // tmp.add((int) t.charAt(0));
 
             Menu tmp = new Menu(h, t);
             menu[i] = tmp;
@@ -40,6 +51,8 @@ public class TP01 {
 
         int V = in.nextInt(); // jumlah koki
         for (int i = 1; i <= V; i++) {
+            // ArrayList<Integer> tmp = new ArrayList<>();
+
             String S = in.next(); // spesialis
 
             Koki tmp = new Koki(i, S);
@@ -50,6 +63,11 @@ public class TP01 {
             } else {
                 kokiG.add(tmp);
             }
+
+            // tmp.add((int) S.charAt(0));
+            // tmp.add(0); // jumlah pelayanan koki
+
+            // koki.put(i, tmp);
         }
 
         int P = in.nextInt(); // banyaknya pelanggan
@@ -57,14 +75,21 @@ public class TP01 {
         pelangganBlackList = new boolean[P];
 
         int N = in.nextInt(); // banyaknya kursi
+        kapasitasMeja = N;
 
         memoryD = new long[M + 1][3][3][3]; // inisialisasi array untuk Memorization
 
+        prefD = new int[M]; // inisialisasi array untuk Prefix Sum commad D
+        for (int i = 0; i < M; i++) {
+            prefD[i] = (i > 0 ? prefD[i - 1] : 0) + menu[i].harga;
+        }
+        // for (int i = 0; i < pref.length; i++) {
+        // out.print(pref[i] + " ");
+        // }
+        // out.println();
+
         int Y = in.nextInt(); // jumlah hari beroperasi
         for (int i = 0; i < Y; i++) {
-            jumlahPelangganIn = 0;
-            pesanan.clear();
-
             int Pi = in.nextInt(); // jumlah pelanggan yang datang pada hari ke-i
             prefAS = new int[Pi]; // inisialisasi array untuk Prefix Sum Advance Scanning
             for (int j = 0; j < Pi; j++) {
@@ -73,6 +98,10 @@ public class TP01 {
                 int U = in.nextInt(); // uang
 
                 out.print(handleCustomer(j, N, I, K, U) + " ");
+
+                // update pref advance scanning
+                prefAS[j] = (j > 0 ? prefAS[j - 1] : 0)
+                        + (pelanggan[riwayatIdPelanggan.get(j) - 1].kesehatan.equals("+") ? 1 : 0);
             }
             out.println();
 
@@ -97,32 +126,48 @@ public class TP01 {
                     GpromoCost = in.nextInt();
                     SpromoCost = in.nextInt();
 
-                    // fill memoryD with max value possible
+                    // promoCost.put("A", firstParam);
+                    // promoCost.put("G", secondParam);
+                    // promoCost.put("S", thirdParam);
+
                     for (int k = 0; k <= M; k++) {
                         for (int l = 0; l < 3; l++) {
                             for (int m = 0; m < 3; m++) {
                                 for (int n = 0; n < 3; n++) {
-                                    memoryD[k][l][m][n] = (long) (5e9 + 1);
+                                    memoryD[k][l][m][n] = 50000000000L;
                                 }
                             }
                         }
                     }
                     memoryD[0][0][0][0] = 0;
+                    // Arrays.fill(memoryD, -1); // reset array untuk Memorization
                     out.println(commandD(0, M));
                 }
             }
+            // pelangganIn.clear();
+            kapasitasMeja = N;
+            rLapar.clear();
+            pesanan.clear();
+            riwayatIdPelanggan.clear();
         }
+        // out.println(menu);
+        // out.println(pesanan);
+        // out.println(pelanggan);
+        // out.println(pelangganIn);
+        // out.println(rLapar);
+        // out.println(koki);
+        // out.println(kokiA);
+        // out.println(kokiS);
+        // out.println(kokiG);
+
         out.close();
     }
 
     public static boolean advanceScan(int j, int R) {
         int start = j - R;
         int end = j - 1;
-
-        // get sum positive pelanggan using prefix sum
         int countPos = prefAS[end] - (start > 0 ? prefAS[start - 1] : 0);
-
-        // return apakah jumlah pelanggan yang positif lebih banyak dari yang negatif pada range R
+        // out.print("COUNT POS: " + countPos + " ");
         return countPos > (R / 2);
     }
 
@@ -132,36 +177,29 @@ public class TP01 {
             int R = in.nextInt(); // range advance scanning
             K = advanceScan(j, R) ? "+" : "-";
         }
-        
+        // out.print("KESEHATAN PELANGGAN " + I + ": " + K + ", ");
         Pelanggan tmp = new Pelanggan(I, K, U);
+        // tmp.add((int) K.charAt(0));
+        // tmp.add(U);
 
         pelanggan[I - 1] = tmp;
+        riwayatIdPelanggan.add(I);
 
-        // update pref advance scanning
-        if (K.equals("+")) {
-            prefAS[j] = j > 0 ? prefAS[j - 1] + 1 : 1;
-        } else {
-            prefAS[j] = j > 0 ? prefAS[j - 1] : 0;
-        }
-
-        // check if pelanggan is blacklisted
         if (pelangganBlackList[I - 1]) {
             return 3;
         }
 
-        // cek apakah pelanggan positif
         if (K.equals("+")) {
             return 0;
         }
 
-        jumlahPelangganIn++;
-
-        // cek kepadatan
-        if (jumlahPelangganIn > N) {
+        if (kapasitasMeja == 0) {
+            rLapar.add(I);
             return 2;
         }
 
-        // jika aman
+        // pelangganIn.add(I);
+        kapasitasMeja--;
         return 1;
     }
 
@@ -170,36 +208,39 @@ public class TP01 {
         Menu m = menu[idxMakanan - 1];
         Pesanan tmp = new Pesanan(p, m);
 
-        p.addTotalCost(m.harga);
         pesanan.add(tmp); // append pesanan (idPelanggan, idxMakanan, idKoki)
+        p.addTotalCost(m.harga);
 
         return tmp.koki.id; // return idKoki
     }
 
     public static int commandL() {
-        // get the first el in pesanan and remove it
-        Pesanan currPesanan = pesanan.poll(); 
+        Pesanan currPesanan = pesanan.poll();
         Koki assignedKoki = currPesanan.koki;
+        assignedKoki.addJumlahPelanggan(1);
         if (assignedKoki.spesialis.equals("A")) {
-            // remove and add again to update the sorting
-            kokiA.remove(assignedKoki);
-            assignedKoki.addJumlahPelanggan(1);
-            kokiA.add(assignedKoki);
+            kokiA.add(kokiA.pollFirst());
         } else if (assignedKoki.spesialis.equals("S")) {
-            kokiS.remove(assignedKoki);
-            assignedKoki.addJumlahPelanggan(1);
-            kokiS.add(assignedKoki);
+            kokiS.add(kokiS.pollFirst());
         } else {
-            kokiG.remove(assignedKoki);
-            assignedKoki.addJumlahPelanggan(1);
-            kokiG.add(assignedKoki);
+            kokiG.add(kokiG.pollFirst());
         }
+        // assignedKoki.set(1, assignedKoki.get(1) + 1);
         return currPesanan.pelanggan.id; // idPelanggan
     }
 
     public static int commandB(int idPelanggan) {
         Pelanggan currPelanggan = pelanggan[idPelanggan - 1];
-        jumlahPelangganIn--;
+        // int totalPrice = 0;
+        // for (int idxMakanan : pesananPelanggan.get(idPelanggan)) {
+        // totalPrice += menu.get(idxMakanan).get(0);
+        // }
+        // pelangganIn.remove((Integer) idPelanggan);
+        kapasitasMeja++;
+        if (!rLapar.isEmpty()) {
+            kapasitasMeja--;
+            rLapar.poll();
+        }
         if (currPelanggan.totalCost > currPelanggan.uang) {
             pelangganBlackList[idPelanggan - 1] = true;
             return 0;
@@ -209,18 +250,70 @@ public class TP01 {
 
     public static void commandC(int Q) {
         TreeSet<Koki> allKoki = new TreeSet<>();
-        // add all koki to allKoki
         allKoki.addAll(kokiA);
         allKoki.addAll(kokiS);
         allKoki.addAll(kokiG);
+        // sortKoki(kokiIdList, 0, kokiIdList.size() - 1);
         for (int i = 0; i < Q; i++) {
             out.print(allKoki.pollFirst().id + " "); // idKoki Q teratas
         }
         out.println();
     }
 
+    // public static long commandD(int start, int end, int AQuota, int GQuota, int
+    // SQuota) {
+    // // base case
+    // if (start == end)
+    // return menu[start].harga;
+    // if (start > end)
+    // return 0;
+
+    // // Memorization
+    // if (memoryD[start][AQuota][GQuota][SQuota] != -1)
+    // return memoryD[start][AQuota][GQuota][SQuota];
+
+    // // recursion case
+    // long minCost = Long.MAX_VALUE;
+    // for (int i = start; i <= end; i++) {
+    // long[] tmp = calcD(start, i, AQuota, GQuota, SQuota);
+    // long sum = tmp[0] + commandD(i + 1, end, (int) tmp[1], (int) tmp[2], (int)
+    // tmp[3]);
+    // // quota.put(currMenuType, 1); // reset quota
+    // minCost = Math.min(minCost, sum);
+    // }
+
+    // // store to memory and return minCost
+    // return memoryD[start][AQuota][GQuota][SQuota] = minCost; // harga min untuk
+    // beli seluruh menu makanan
+    // }
+
+    // public static long[] calcD(int start, int end, long AQuota, long GQuota, long
+    // SQuota) {
+    // String currMenuType = menu[start].tipe;
+    // long currTotalCost = prefD[end] - (start > 0 ? prefD[start - 1] : 0); // sum
+    // harga menu dari start hingga end
+
+    // if (currMenuType.equals("A")) {
+    // if (AQuota == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
+    // currTotalCost = (end + 1 - start) * ApromoCost;
+    // AQuota = 0;
+    // }
+    // } else if (currMenuType.equals("G")) {
+    // if (GQuota == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
+    // currTotalCost = (end + 1 - start) * GpromoCost;
+    // GQuota = 0;
+    // }
+    // } else {
+    // if (SQuota == 1 && start != end && currMenuType.equals(menu[end].tipe)) {
+    // currTotalCost = (end + 1 - start) * SpromoCost;
+    // SQuota = 0;
+    // }
+    // }
+
+    // return new long[] { currTotalCost, AQuota, GQuota, SQuota };
+    // }
+
     public static long commandD(int start, int end) {
-        // ide command D menggunakan DP dan Bitmask (ide didapatkan dari Nyoo Steven Christopher)
         for (int i = 1; i <= end; i++) {
             for (int A = 0; A < 3; A++) {
                 for (int G = 0; G < 3; G++) {
@@ -308,6 +401,7 @@ public class TP01 {
                                                 memoryD[i - 1][0][G][S] + ApromoCost);
                                     else
                                         memoryD[i][A][G][S] = memoryD[i - 1][A][G][S] + ApromoCost;
+
                                 } else {
                                     // A=1; G=2; S=1
                                     continue;
@@ -369,12 +463,7 @@ public class TP01 {
 
                                 } else {
                                     // A=2; G=2; S=1
-                                    if (menu[i - 1].tipe.equals("S"))
-                                        memoryD[i][A][G][S] = Math.min(
-                                                memoryD[i - 1][A][G][S] + SpromoCost,
-                                                memoryD[i - 1][A][G][0] + SpromoCost);
-                                    else
-                                        memoryD[i][A][G][S] = memoryD[i - 1][A][G][S] + SpromoCost;
+                                    memoryD[i][A][G][S] = memoryD[i - 1][A][G][S] + SpromoCost;
                                 }
                             }
                         }
@@ -384,17 +473,55 @@ public class TP01 {
         }
 
         // get the minimun
-        long min = (long) (5e9 + 1);
+        long min = Long.MAX_VALUE;
         for (int A = 0; A < 3; A += 2) {
             for (int G = 0; G < 3; G += 2) {
                 for (int S = 0; S < 3; S += 2) {
-                    min = Math.min(min, memoryD[menu.length][A][G][S]);
+                    if (memoryD[menu.length][A][G][S] < min)
+                        min = memoryD[menu.length][A][G][S];
                 }
             }
         }
 
+        // for (int i = 1; i <= end; i++) {
+        // for (int A = 0; A < 3; A++) {
+        // for (int G = 0; G < 3; G++) {
+        // for (int S = 0; S < 3; S++) {
+        // out.print(i + " " + A + " " + G + " " + S + ": ");
+        // out.println(memoryD[i][A][G][S]);
+        // }
+        // }
+        // }
+        // }
+
         return min;
     }
+
+    // public static long commandD(int start, int end, int A, int G, int S) {
+    // // base case
+    // if (start == end)
+    // return menu[start].harga;
+    // if (start > end)
+    // return 0;
+
+    // // Memorization
+    // if (memoryD[start][A][G][S] != -1)
+    // return memoryD[start][A][G][S];
+
+    // long minCost = Long.MAX_VALUE;
+    // if (menu[start].tipe.equals("A")) {
+    // if (A == 2 || S == 1 || G == 1) {
+    // minCost = Math.min(minCost, commandD(start + 1, end, A, G, S) +
+    // menu[start].harga);
+    // } else if (A == 1) {
+    // // minCost = (end + 1 - start) * ApromoCost;
+    // minCost = Math.min(minCost, commandD(start + 1, end, A + 1, G, S) +
+    // ApromoCost);
+    // }
+    // }
+
+    // return 0;
+    // }
 
     // taken from https://codeforces.com/submissions/Petr
     // together with PrintWriter, these input-output (IO) is much faster than the
@@ -477,6 +604,12 @@ public class TP01 {
 
         public void addTotalCost(int totalCost) {
             this.totalCost += totalCost;
+        }
+
+        @Override
+        public String toString() {
+            return "Pelanggan [id=" + id + ", kesehatan=" + kesehatan + ", totalCost=" + totalCost + ", uang=" + uang
+                    + "]";
         }
     }
 
