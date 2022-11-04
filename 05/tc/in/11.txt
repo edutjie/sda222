@@ -1,0 +1,62 @@
+30
+B 4
+C 7
+D 8
+E 3
+F 6
+G 5
+H 3
+I 5
+J 3
+K 6
+L 3
+M 3
+N 6
+O 8
+P 5
+Q 4
+R 8
+S 6
+T 6
+U 5
+V 5
+W 5
+X 4
+Y 3
+Z 7
+AB 8
+BB 4
+CB 8
+DB 6
+EB 6
+30
+DUO 3 10
+DUO 3 3
+DUO 1 1
+DUO 3 5
+DUO 1 1
+DUO 5 7
+DUO 4 4
+DUO 5 6
+DUO 1 1
+DUO 1 2
+DUO 1 1
+DUO 3 7
+DUO 1 1
+DUO 4 5
+DUO 5 5
+DUO 1 1
+DUO 1 1
+DUO 1 5
+DUO 1 2
+DUO 4 6
+DUO 6 9
+DUO 1 7
+DUO 2 2
+DUO 5 8
+DUO 2 5
+DUO 2 4
+DUO 4 4
+DUO 4 4
+DUO 6 9
+DUO 2 3

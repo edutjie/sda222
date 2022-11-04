@@ -64,20 +64,18 @@ public class Lab5 {
         Node nodeLB = tree.lowerBound(tree.root, K);
         Node nodeUB = tree.upperBound(tree.root, B);
 
-        if (tree.root == null || tree.root.height < 1 ||
+        if (tree.root == null || tree.root.height <= 1 ||
                 nodeLB == null || nodeUB == null || nodeLB.key > nodeUB.key ||
                 (nodeLB == nodeUB && nodeLB.entries.size() == 1)) {
             out.println("-1 -1");
         } else {
             String entryLB = nodeLB.entries.removeLast();
-            nodeLB.size--;
             if (nodeLB.entries.isEmpty()) {
                 tree.root = tree.deleteNode(tree.root, nodeLB.key);
             }
 
             // nodeUB = tree.upperBound(tree.root, B);
             String entryUB = nodeUB.entries.removeLast();
-            nodeUB.size--;
             if (nodeUB.entries.isEmpty()) {
                 tree.root = tree.deleteNode(tree.root, nodeUB.key);
             }
@@ -119,14 +117,13 @@ public class Lab5 {
 
 // TODO: modify as needed
 class Node {
-    int key, height, size;
+    int key, height;
     Node left, right;
     ArrayDeque<String> entries = new ArrayDeque<>();
 
     Node(int key) {
         this.key = key;
         this.height = 1;
-        this.size = entries.size();
     }
 
     @Override
@@ -134,7 +131,6 @@ class Node {
         return "Node{" +
                 "key=" + key +
                 ", height=" + height +
-                ", size=" + size +
                 ", entries=" + entries +
                 '}';
     }
@@ -148,9 +144,6 @@ class AVLTree {
     // Utility function to recalculate a node's height
     void updateHeight(Node node) {
         node.height = Math.max(getHeight(node.left), getHeight(node.right)) + 1;
-
-        // update size
-        node.size = node.entries.size() + getSize(node.left) + getSize(node.right);
     }
 
     Node rightRotate(Node node) {
@@ -193,7 +186,6 @@ class AVLTree {
         if (node == null) {
             Node newNode = new Node(key);
             newNode.entries.add(playerName);
-            newNode.size++;
             return newNode;
         }
 
@@ -203,7 +195,6 @@ class AVLTree {
             node.right = insertNode(node.right, key, playerName);
         } else {
             node.entries.add(playerName);
-            node.size++;
             return node;
         }
 
@@ -369,52 +360,21 @@ class AVLTree {
         return node;
     }
 
-    // int getRank(Node node, int key) {
-    // if (node == null)
-    // return 0;
-
-    // int count = 0;
-
-    // count += getRank(node.left, key);
-
-    // if (node.key < key)
-    // count += node.entries.size();
-
-    // count += getRank(node.right, key);
-
-    // return count;
-    // }
-
     int getRank(Node node, int key) {
         if (node == null)
             return 0;
 
-        if (node.key > key)
-            return getRank(node.left, key);
-        else if (node.key < key)
-            return getSize(node.left) + node.entries.size() + getRank(node.right, key);
-        else
-            // if (node.key == key)
-            return getSize(node.left);
+        int count = 0;
 
-        // return getSize(node.left) + node.entries.size() + getRank(node.right, key);
+        count += getRank(node.left, key);
+
+        if (node.key < key)
+            count += node.entries.size();
+
+        count += getRank(node.right, key);
+
+        return count;
     }
-
-    // sum of sizes of all nodes in the tree that is <= key
-    // int getRank(Node node, int key) {
-    // if (node == null)
-    // return 0;
-
-    // if (node.key > key)
-    // return getRank(node.left, key);
-
-    // if (node.key < key)
-    // return node.left != null ? node.left.size : 0 + node.entries.size() +
-    // getRank(node.right, key);
-
-    // // if (node.key == key)
-    // return node.left != null ? node.left.size : 0;
-    // }
 
     void preOrder(PrintWriter out, Node node) {
         if (node != null) {
@@ -422,13 +382,6 @@ class AVLTree {
             preOrder(out, node.left);
             preOrder(out, node.right);
         }
-    }
-
-    int getSize(Node node) {
-        if (node == null)
-            return 0;
-
-        return node.size;
     }
 
     // Utility function to get height of node

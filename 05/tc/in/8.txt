@@ -1,0 +1,22 @@
+10
+A 10
+B 2
+C 3
+D 5
+E 6
+F 4
+G 1
+H 9
+I 8
+J 7
+10
+DUO 5 5
+DUO 2 2
+DUO 4 7
+DUO 2 2
+DUO 1 8
+DUO 3 7
+DUO 3 8
+DUO 6 9
+DUO 8 10
+DUO 8 8
