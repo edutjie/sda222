@@ -30,14 +30,15 @@ public class Lab5 {
         }
 
         int numOfQueries = in.nextInt();
+        // tree.preOrder(out, tree.root);
         for (int i = 0; i < numOfQueries; i++) {
-            // tree.preOrder(tree.root);
             String cmd = in.next();
             if (cmd.equals("MASUK")) {
                 handleQueryMasuk();
             } else {
                 handleQueryDuo();
             }
+            // tree.preOrder(out, tree.root);
         }
 
         out.close();
@@ -63,7 +64,9 @@ public class Lab5 {
         Node nodeLB = tree.lowerBound(tree.root, K);
         Node nodeUB = tree.upperBound(tree.root, B);
 
-        if (tree.root.height <= 1) {
+        if (tree.root == null || tree.root.height <= 1 ||
+                nodeLB == null || nodeUB == null ||
+                (nodeLB == nodeUB && nodeLB.entries.size() == 1)) {
             out.println("-1 -1");
         } else {
             String entryLB = nodeLB.entries.removeLast();
@@ -71,6 +74,11 @@ public class Lab5 {
                 tree.root = tree.deleteNode(tree.root, nodeLB.key);
             }
 
+            nodeUB = tree.upperBound(tree.root, B);
+            if (nodeUB == null) {
+                out.println("-1 -1");
+                return;
+            }
             String entryUB = nodeUB.entries.removeLast();
             if (nodeUB.entries.isEmpty()) {
                 tree.root = tree.deleteNode(tree.root, nodeUB.key);
@@ -120,6 +128,15 @@ class Node {
     Node(int key) {
         this.key = key;
         this.height = 1;
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "key=" + key +
+                ", height=" + height +
+                ", entries=" + entries +
+                '}';
     }
 }
 
@@ -257,6 +274,7 @@ class AVLTree {
 
                 // copy the inorder successor's content to this node
                 node.key = tmp.key;
+                node.entries = tmp.entries;
 
                 // delete the inorder successor
                 node.right = deleteNode(node.right, tmp.key);
@@ -350,34 +368,23 @@ class AVLTree {
         if (node == null)
             return 0;
 
-        if (key < node.key)
-            return getRank(node.left, key);
+        int count = 0;
 
-        if (key > node.key)
-            return 1 + countEntries(node.left, key) + getRank(node.right, key);
+        count += getRank(node.left, key);
 
-        return countEntries(node.left, key);
+        if (node.key < key)
+            count += node.entries.size();
+
+        count += getRank(node.right, key);
+
+        return count;
     }
 
-    int countEntries(Node node, int key) {
-        // count entries from nodes that key is less than key
-        if (node == null)
-            return 0;
-
-        if (key < node.key)
-            return countEntries(node.left, key);
-
-        if (key > node.key)
-            return node.entries.size() + countEntries(node.left, key) + countEntries(node.right, key);
-
-        return node.entries.size() + countEntries(node.left, key);
-    }
-
-    void preOrder(Node node) {
+    void preOrder(PrintWriter out, Node node) {
         if (node != null) {
-            System.out.println(node.key + ":" + node.entries);
-            preOrder(node.left);
-            preOrder(node.right);
+            out.println(node);
+            preOrder(out, node.left);
+            preOrder(out, node.right);
         }
     }
 
