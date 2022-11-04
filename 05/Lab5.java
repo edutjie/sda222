@@ -75,7 +75,6 @@ public class Lab5 {
                 tree.root = tree.deleteNode(tree.root, nodeLB.key);
             }
 
-            // nodeUB = tree.upperBound(tree.root, B);
             String entryUB = nodeUB.entries.removeLast();
             nodeUB.size--;
             if (nodeUB.entries.isEmpty()) {
@@ -251,11 +250,6 @@ class AVLTree {
         } else {
             // key == root.key -> the node we're going to delete
 
-            // if (node.entries.size() > 1) {
-            // node.entries.removeLast();
-            // return node;
-            // }
-
             // node with only one child or no child
             if ((node.left == null) || (node.right == null)) {
                 Node tmp = null;
@@ -356,35 +350,6 @@ class AVLTree {
         return upperBound(node.left, value);
     }
 
-    Node searchNode(Node node, int key) {
-        if (node == null)
-            return node;
-
-        if (key > node.key)
-            return searchNode(node.right, key);
-
-        if (key < node.key)
-            return searchNode(node.left, key);
-
-        return node;
-    }
-
-    // int getRank(Node node, int key) {
-    // if (node == null)
-    // return 0;
-
-    // int count = 0;
-
-    // count += getRank(node.left, key);
-
-    // if (node.key < key)
-    // count += node.entries.size();
-
-    // count += getRank(node.right, key);
-
-    // return count;
-    // }
-
     int getRank(Node node, int key) {
         if (node == null)
             return 0;
@@ -396,25 +361,7 @@ class AVLTree {
         else
             // if (node.key == key)
             return getSize(node.left);
-
-        // return getSize(node.left) + node.entries.size() + getRank(node.right, key);
     }
-
-    // sum of sizes of all nodes in the tree that is <= key
-    // int getRank(Node node, int key) {
-    // if (node == null)
-    // return 0;
-
-    // if (node.key > key)
-    // return getRank(node.left, key);
-
-    // if (node.key < key)
-    // return node.left != null ? node.left.size : 0 + node.entries.size() +
-    // getRank(node.right, key);
-
-    // // if (node.key == key)
-    // return node.left != null ? node.left.size : 0;
-    // }
 
     void preOrder(PrintWriter out, Node node) {
         if (node != null) {
