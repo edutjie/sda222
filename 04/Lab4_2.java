@@ -32,6 +32,14 @@ class Gedung {
         public Lantai() {
             this.next = null;
             this.prev = null;
+            // this.level = ++topLantai;
+            this.namaGedung = nama;
+        }
+
+        public Lantai(int level) {
+            this.next = null;
+            this.prev = null;
+            // this.level = level;
             this.namaGedung = nama;
         }
 
@@ -100,9 +108,6 @@ class Gedung {
             currentIblis.setPrevLantai(newLantai);
             newLantai.setNextLantai(currentIblis);
             topLantai++;
-            if (currDenji != null && denjiLevel >= iblisLevel)
-                denjiLevel++;
-            iblisLevel++;
             return true;
         }
         return false;
@@ -119,12 +124,8 @@ class Gedung {
                 currentDenji.setPrevLantai(prevPrevDenji);
             } else {
                 this.head = currentDenji;
-                currentDenji.setPrevLantai(null);
             }
             topLantai--;
-            if (currIblis != null && iblisLevel >= denjiLevel)
-                iblisLevel--;
-            denjiLevel--;
             return true;
         }
         return false;
@@ -132,7 +133,26 @@ class Gedung {
 
 }
 
-public class Lab4 {
+// TODO: Lengkapi Class Gedung
+class KumpulanGedung {
+    Gedung head, tail;
+
+    public KumpulanGedung() {
+
+    }
+
+}
+
+// TODO: Lengkapi Class Karakter
+// class Karakter {
+
+// public Karakter() {
+
+// }
+
+// }
+
+public class Lab4_2 {
 
     private static InputReader in;
     static PrintWriter out;
@@ -196,12 +216,12 @@ public class Lab4 {
             } else if (command.equals("PINDAH")) {
                 pindah();
             }
-            // out.println("Denji berada di lantai " +
-            //         kumpulanGedung[denjiGedungPointer].denjiLevel + " gedung "
-            //         + kumpulanGedung[denjiGedungPointer].nama + " dengan arah " + (denjiIsUp ? "NAIK" : "TURUN"));
-            // out.println("Iblis berada di lantai " +
-            //         kumpulanGedung[iblisGedungPointer].iblisLevel + " gedung "
-            //         + kumpulanGedung[iblisGedungPointer].nama + " dengan arah " + (iblisIsUp ? "NAIK" : "TURUN"));
+            out.println("Denji berada di lantai " +
+                    kumpulanGedung[denjiGedungPointer].denjiLevel + " gedung "
+                    + kumpulanGedung[denjiGedungPointer].nama + " dengan arah " + (denjiIsUp ? "NAIK" : "TURUN"));
+            out.println("Iblis berada di lantai " +
+                    kumpulanGedung[iblisGedungPointer].iblisLevel + " gedung "
+                    + kumpulanGedung[iblisGedungPointer].nama + " dengan arah " + (denjiIsUp ? "NAIK" : "TURUN"));
         }
 
         out.close();
@@ -305,7 +325,9 @@ public class Lab4 {
     static void hancur() {
         Gedung gedungDenji = kumpulanGedung[denjiGedungPointer];
         if (gedungDenji.removeLantai()) {
-            out.println(gedungDenji.nama + " " + (gedungDenji.denjiLevel));
+            out.println(gedungDenji.nama + " " + (--gedungDenji.denjiLevel));
+            if (denjiGedungPointer == iblisGedungPointer)
+                kumpulanGedung[iblisGedungPointer].iblisLevel--;
         } else {
             out.println(gedungDenji.nama + " " + -1);
         }
@@ -318,7 +340,9 @@ public class Lab4 {
     static void tambah() {
         Gedung gedungIblis = kumpulanGedung[iblisGedungPointer];
         if (gedungIblis.addLantai()) {
-            out.println(gedungIblis.nama + " " + (gedungIblis.iblisLevel - 1));
+            out.println(gedungIblis.nama + " " + (++gedungIblis.iblisLevel - 1));
+            if (denjiGedungPointer == iblisGedungPointer)
+                kumpulanGedung[denjiGedungPointer].denjiLevel++;
         } else {
             out.println(gedungIblis.nama + " " + -1);
         }
