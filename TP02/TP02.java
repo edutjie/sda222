@@ -6,11 +6,12 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 
-class TP02 {
+public class TP02 {
     private static InputReader in;
     static PrintWriter out;
     static LinkedList listMesin = new LinkedList();
     static int currLargestScore = 0;
+    static AVLNode currScore;
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -68,8 +69,12 @@ class TP02 {
     public static int queryMain(int Y) { // Y = skor pemain
         AVLTree currScores = listMesin.playerPtr.scores;
         currScores.root = currScores.insertNode(currScores.root, Y);
+        listMesin.playerPtr.data += 1;
 
-        return currScores.getRank(currScores.root, Y) + 1;
+        // out.println("currScores size: " + currScores.size);
+        // out.println("currScores rank: " + currScores.getRank(currScores.root, Y));
+        // out.println("currEntrySize: " + currEntrySize);
+        return currScores.size - (currScores.getRank(currScores.root, Y) - 1);
         // urutan posisi Y pada barisan skor dr mesin permainan yang dimainin
     }
 
@@ -92,6 +97,7 @@ class TP02 {
             // reset mesin's scores
             sumSkor = currMesin.scores.totalEntries;
             currMesin.scores = new AVLTree();
+            currMesin.data = 0;
 
             listMesin.playerPtr = currMesin.next;
 
@@ -110,6 +116,7 @@ class TP02 {
                 currMesin.scores.root = currMesin.scores.deleteLargest(currMesin.scores.root); // remove largest element
                 sumSkor += currLargestScore;
             }
+            currMesin.data -= X;
             // currMesin.scores.totalScore -= sumSkor;
         }
 
@@ -119,19 +126,38 @@ class TP02 {
 
     public static int queryLihat(int L, int H) { // L, H = range yang ingin dilihat
         Node currMesin = listMesin.playerPtr;
+        // currMesin.scores.preOrder(out, currMesin.scores.root);
         int lRank = currMesin.scores.getRank(currMesin.scores.root, L);
+        // out.println("lRank: " + lRank);
         int hRank = currMesin.scores.getRank(currMesin.scores.root, H);
+        // out.println("hRank: " + hRank);
 
-        return lRank - hRank + 1; // banyaknya skor yang nilainya di range L - H (inklusif)
+        if (hRank == lRank) {
+            // TODO: currScore might be null
+            if (hRank == currMesin.scores.size && H != currScore.key && L != currScore.key)
+                return 0;
+            else
+                return currScore.entries.size();
+        }
+
+        if (lRank == 0) {
+            return hRank;
+        }
+
+        return hRank - lRank + 1;
+        // banyaknya skor yang nilainya di range L - H (inklusif)
     }
 
     public static int queryEvaluasi() {
+        // out.println(listMesin.playerPtr.data + ", id: " + listMesin.playerPtr.id);
+        // listMesin.display();
         listMesin.sort();
+        // listMesin.display();
 
         // get player mesin index
         Node currMesin = listMesin.getFirst();
-        int playerPtrIdx = 0;
-        while (listMesin.playerPtr != currMesin) {
+        int playerPtrIdx = 1;
+        while (!listMesin.playerPtr.equals(currMesin)) {
             currMesin = currMesin.next;
             playerPtrIdx++;
         }
@@ -186,15 +212,15 @@ class Node {
         prev = p;
     }
 
-    // @Override
-    // public boolean equals(Object obj) {
-    // if (obj instanceof Node) {
-    // Node node = (Node) obj;
-    // return (this.data == node.data && this.id == node.id);
-    // } else {
-    // return false;
-    // }
-    // }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Node) {
+            Node node = (Node) obj;
+            return (this.id == node.id);
+        } else {
+            return false;
+        }
+    }
 }
 
 /* Class linkedList */
@@ -438,7 +464,7 @@ class LinkedList {
             result = b;
             result.next = sortedMerge(a, b.next);
         } else {
-            if (a.id > b.id) {
+            if (a.id < b.id) {
                 result = a;
                 result.next = sortedMerge(a.next, b);
             } else {
@@ -475,18 +501,18 @@ class LinkedList {
             return;
         }
         if (start.next == start) {
-            System.out.print(start.data + " <-> " + ptr.data + "\n");
+            System.out.print(start.data + ", id: " + ptr.id + " <-> " + ptr.data + ", id: " + ptr.id + "\n");
             return;
         }
-        System.out.print(start.data + " <-> ");
+        System.out.print(start.data + ", id: " + ptr.id + " <-> ");
         ptr = start.next;
         while (ptr.next != start) {
-            System.out.print(ptr.data + " <-> ");
+            System.out.print(ptr.data + ", id: " + ptr.id + " <-> ");
             ptr = ptr.next;
         }
-        System.out.print(ptr.data + " <-> ");
+        System.out.print(ptr.data + ", id: " + ptr.id + " <-> ");
         ptr = ptr.next;
-        System.out.print(ptr.data + "\n");
+        System.out.print(ptr.data + ", id: " + ptr.id + "\n");
     }
 }
 
@@ -575,6 +601,7 @@ class AVLTree {
             newNode.size++;
             this.size++;
             this.totalEntries += key;
+            // TP02.currScore = newNode;
             return newNode;
         }
 
@@ -587,6 +614,7 @@ class AVLTree {
             node.size++;
             this.size++;
             this.totalEntries += key;
+            // TP02.currScore = node;
             return node;
         }
 
@@ -794,12 +822,14 @@ class AVLTree {
             return 0;
 
         if (node.key > key)
-            return getSize(node.right) + node.entries.size() + getRank(node.left, key);
-        else if (node.key < key)
-            return getRank(node.right, key);
-        else
+            return getRank(node.left, key);
+        // else if (node.key < key)
+        else {
             // if (node.key == key)
-            return getSize(node.right);
+            TP02.currScore = node;
+            return getSize(node.left) + node.entries.size() + getRank(node.right, key);
+            // return getSize(node.left);
+        }
     }
 
     void preOrder(PrintWriter out, AVLNode node) {
