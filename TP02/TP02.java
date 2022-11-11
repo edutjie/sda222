@@ -10,8 +10,7 @@ public class TP02 {
     private static InputReader in;
     static PrintWriter out;
     static LinkedList listMesin = new LinkedList();
-    static int currLargestScore = 0;
-    static AVLNode currScore;
+    static int X;
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -72,9 +71,10 @@ public class TP02 {
         listMesin.playerPtr.data += 1;
 
         // out.println("currScores size: " + currScores.size);
-        // out.println("currScores rank: " + currScores.getRank(currScores.root, Y));
-        // out.println("currEntrySize: " + currEntrySize);
-        return currScores.size - (currScores.getRank(currScores.root, Y) - 1);
+        // out.println("currScores rank: " + currScores.countGreater(currScores.root,
+        // Y));
+        // currScores.preOrder(out, currScores.root);
+        return currScores.countGreater(currScores.root, Y) + 1;
         // urutan posisi Y pada barisan skor dr mesin permainan yang dimainin
     }
 
@@ -89,14 +89,17 @@ public class TP02 {
         // nomor id mesin tempat pemain berada setelah gerak
     }
 
-    public static int queryHapus(int X) { // X = banyaknya skor teratas yang curang
+    public static long queryHapus(int X) { // X = banyaknya skor teratas yang curang
+        TP02.X = X;
         Node currMesin = listMesin.playerPtr;
-        int sumSkor = 0;
+        long sumSkor = 0;
 
         if (currMesin.scores.size <= X) {
             // reset mesin's scores
-            sumSkor = currMesin.scores.totalEntries;
-            currMesin.scores = new AVLTree();
+            sumSkor = currMesin.scores.sum;
+            currMesin.scores.root = null;
+            currMesin.scores.size = 0;
+            currMesin.scores.sum = 0;
             currMesin.data = 0;
 
             listMesin.playerPtr = currMesin.next;
@@ -111,13 +114,28 @@ public class TP02 {
                 listMesin.getLast().id = currMesin.id;
             }
         } else {
-            for (int i = 0; i < X; i++) {
-                // TODO: delete first X node from AVLTree
-                currMesin.scores.root = currMesin.scores.deleteLargest(currMesin.scores.root); // remove largest element
-                sumSkor += currLargestScore;
+            long sumBeforeDel = currMesin.scores.sum;
+            // out.println("Before Delete");
+            // currMesin.scores.preOrder(out, currMesin.scores.root);
+            // out.println("sum " + currMesin.scores.sum);
+            // for (int i = 0; i < X; i++) {
+            // // TODO: delete first X node from AVLTree
+            // currMesin.scores.root =
+            // currMesin.scores.deleteLargest(currMesin.scores.root); // remove largest
+            // element
+            // }
+
+            while (TP02.X > 0) {
+                currMesin.scores.root = currMesin.scores.deleteLargest(currMesin.scores.root);
             }
-            currMesin.data -= X;
-            // currMesin.scores.totalScore -= sumSkor;
+
+            sumSkor = sumBeforeDel - currMesin.scores.sum;
+            currMesin.data = currMesin.scores.size;
+            // out.println("After Delete");
+            // currMesin.scores.preOrder(out, currMesin.scores.root);
+            // out.println("sum " + currMesin.scores.sum);
+            // out.println("sumSkor: " + sumSkor + ", currMesin.data: "
+            // + currMesin.data + ", currMesin.scores.size: " + currMesin.scores.size);
         }
 
         // listMesin.display();
@@ -127,40 +145,26 @@ public class TP02 {
     public static int queryLihat(int L, int H) { // L, H = range yang ingin dilihat
         Node currMesin = listMesin.playerPtr;
         // currMesin.scores.preOrder(out, currMesin.scores.root);
-        int lRank = currMesin.scores.getRank(currMesin.scores.root, L);
+
+        if (L == H) {
+            AVLNode searchedNode = currMesin.scores.searchNode(currMesin.scores.root, H);
+            return searchedNode != null ? searchedNode.entries.size() : 0;
+        }
+
+        int lRank = currMesin.scores.countGreaterEqual(currMesin.scores.root, L);
         // out.println("lRank: " + lRank);
-        int hRank = currMesin.scores.getRank(currMesin.scores.root, H);
+        int hRank = currMesin.scores.countGreater(currMesin.scores.root, H);
         // out.println("hRank: " + hRank);
 
-        if (hRank == lRank) {
-            // TODO: currScore might be null
-            if (hRank == currMesin.scores.size && H != currScore.key && L != currScore.key)
-                return 0;
-            else
-                return currScore.entries.size();
-        }
-
-        if (lRank == 0) {
-            return hRank;
-        }
-
-        return hRank - lRank + 1;
+        return lRank - hRank;
         // banyaknya skor yang nilainya di range L - H (inklusif)
     }
 
     public static int queryEvaluasi() {
         // out.println(listMesin.playerPtr.data + ", id: " + listMesin.playerPtr.id);
         // listMesin.display();
-        listMesin.sort();
+        int playerPtrIdx = listMesin.sort();
         // listMesin.display();
-
-        // get player mesin index
-        Node currMesin = listMesin.getFirst();
-        int playerPtrIdx = 1;
-        while (!listMesin.playerPtr.equals(currMesin)) {
-            currMesin = currMesin.next;
-            playerPtrIdx++;
-        }
         return playerPtrIdx; // urutan posisi baru mesin permainan yang berada di depan pemain
     }
 
@@ -194,7 +198,8 @@ public class TP02 {
 // referensi:
 // https://www.sanfoundry.com/java-program-implement-circular-doubly-linked-list/
 class Node {
-    int data, id;
+    long data;
+    int id;
     Node next, prev;
     AVLTree scores = new AVLTree();
 
@@ -206,7 +211,7 @@ class Node {
     }
 
     /* Constructor */
-    public Node(int d, Node n, Node p) {
+    public Node(long d, Node n, Node p) {
         data = d;
         next = n;
         prev = p;
@@ -235,31 +240,6 @@ class LinkedList {
         size = 0;
     }
 
-    // public void sort(Comparator<Node> comparator) {
-    // // referensi:
-    // //
-    // https://www.geeksforgeeks.org/java-program-to-sort-the-elements-of-the-circular-linked-list/
-
-    // // current pointer pointing to the head of the list
-    // Node curr = start;
-
-    // // this is the Algorithm discussed above
-    // if (start != null) {
-    // while (curr.next != start) {
-    // Node tmp = curr.next;
-    // while (tmp != start) {
-    // if (comparator.compare(curr, tmp) > 0) {
-    // int value = curr.data;
-    // curr.data = tmp.data;
-    // tmp.data = value;
-    // }
-    // tmp = tmp.next;
-    // }
-    // curr = curr.next;
-    // }
-    // }
-    // }
-
     /* Function to check if list is empty */
     public boolean isEmpty() {
         return start == null;
@@ -274,7 +254,7 @@ class LinkedList {
     }
 
     /* Function to insert element at begining */
-    public void addFirst(int val) {
+    public void addFirst(long val) {
         Node nptr = new Node(val, null, null);
         if (start == null) {
             nptr.next = nptr;
@@ -292,7 +272,7 @@ class LinkedList {
     }
 
     /* Function to insert element at end */
-    public void add(int val) {
+    public void add(long val) {
         Node nptr = new Node(val, null, null);
         if (start == null) {
             nptr.next = nptr;
@@ -310,7 +290,7 @@ class LinkedList {
     }
 
     /* Function to insert element at position */
-    public void addAt(int val, int pos) {
+    public void addAt(long val, int pos) {
         Node nptr = new Node(val, null, null);
         if (pos == 1) {
             addFirst(val);
@@ -415,81 +395,94 @@ class LinkedList {
     }
 
     // sort Node's data and id in descending order using merge sort
-    public void sort() {
+    public int sort() {
         // transform circular linked list to non-circular linked list
         end.next = null;
+        start.prev = null;
         start = mergeSort(start);
 
         // transform it back to circular linked list
         Node ptr = start;
+        int playerPtrIdx = 1;
+        boolean isCountingIdx = true;
         while (ptr.next != null) {
+            if (isCountingIdx && ptr != playerPtr)
+                playerPtrIdx++;
+            else
+                isCountingIdx = false;
+
             ptr = ptr.next;
         }
         end = ptr;
         end.next = start;
+        start.prev = end;
+
+        return playerPtrIdx;
     }
 
-    public Node mergeSort(Node head) {
-        if (head == null || head.next == null) {
-            return head;
+    // split, mergeSort, merge methods reference:
+    // https://www.geeksforgeeks.org/merge-sort-for-doubly-linked-list/
+    public Node split(Node head) {
+        Node fast = head, slow = head;
+        while (fast.next != null && fast.next.next != null) {
+            fast = fast.next.next;
+            slow = slow.next;
         }
-
-        Node middle = getMiddle(head);
-        Node nextOfMiddle = middle.next;
-
-        middle.next = null;
-
-        Node left = mergeSort(head);
-        Node right = mergeSort(nextOfMiddle);
-
-        Node sortedList = sortedMerge(left, right);
-        return sortedList;
+        Node temp = slow.next;
+        slow.next = null;
+        return temp;
     }
 
-    // merge two sorted linked list
-    public Node sortedMerge(Node a, Node b) {
-        if (a == null) {
-            return b;
+    public Node mergeSort(Node node) {
+        if (node == null || node.next == null) {
+            return node;
         }
-        if (b == null) {
-            return a;
+        Node second = split(node);
+
+        // Recur for left and right halves
+        node = mergeSort(node);
+        second = mergeSort(second);
+
+        // Merge the two sorted halves
+        return merge(node, second);
+    }
+
+    // Function to merge two linked lists
+    public Node merge(Node first, Node second) {
+        // If first linked list is empty
+        if (first == null) {
+            return second;
         }
 
-        Node result = null;
+        // If second linked list is empty
+        if (second == null) {
+            return first;
+        }
 
-        if (a.data > b.data) {
-            result = a;
-            result.next = sortedMerge(a.next, b);
-        } else if (a.data < b.data) {
-            result = b;
-            result.next = sortedMerge(a, b.next);
+        // Pick the bigger value
+        if (first.data > second.data) {
+            first.next = merge(first.next, second);
+            first.next.prev = first;
+            first.prev = null;
+            return first;
+        } else if (first.data < second.data) {
+            second.next = merge(first, second.next);
+            second.next.prev = second;
+            second.prev = null;
+            return second;
         } else {
-            if (a.id < b.id) {
-                result = a;
-                result.next = sortedMerge(a.next, b);
+            if (first.id < second.id) {
+                first.next = merge(first.next, second);
+                first.next.prev = first;
+                first.prev = null;
+                return first;
             } else {
-                result = b;
-                result.next = sortedMerge(a, b.next);
+                second.next = merge(first, second.next);
+                second.next.prev = second;
+                second.prev = null;
+                return second;
             }
         }
-
-        return result;
-    }
-
-    // get middle node of linked list
-    public Node getMiddle(Node head) {
-        if (head == null) {
-            return head;
-        }
-
-        Node slow = head, fast = head;
-
-        while (fast.next != null && fast.next.next != null) {
-            slow = slow.next;
-            fast = fast.next.next;
-        }
-
-        return slow;
     }
 
     /* Function to display status of list */
@@ -544,12 +537,13 @@ class AVLTree {
 
     AVLNode root;
     // TODO: Implement size
-    int size, totalEntries;
+    int size;
+    long sum;
 
     AVLTree() {
         this.root = null;
         this.size = 0;
-        this.totalEntries = 0;
+        this.sum = 0;
     }
 
     // Utility function to recalculate a node's height
@@ -600,7 +594,8 @@ class AVLTree {
             newNode.entries.add(key);
             newNode.size++;
             this.size++;
-            this.totalEntries += key;
+            this.sum += key;
+
             // TP02.currScore = newNode;
             return newNode;
         }
@@ -613,7 +608,7 @@ class AVLTree {
             node.entries.add(key);
             node.size++;
             this.size++;
-            this.totalEntries += key;
+            this.sum += key;
             // TP02.currScore = node;
             return node;
         }
@@ -692,7 +687,7 @@ class AVLTree {
             }
 
             this.size--;
-            this.totalEntries -= key;
+            this.sum -= key;
         }
 
         // if the tree had only one node then return
@@ -731,19 +726,24 @@ class AVLTree {
 
     AVLNode deleteLargest(AVLNode node) {
         // BST deletion
-        if (node == null)
+        if (node == null || TP02.X <= 0)
             return node;
 
         if (node.right == null) {
             AVLNode tmp = node.left;
-            TP02.currLargestScore = node.key;
-            this.totalEntries -= node.key;
-            this.size--;
-            if (node.entries.size() > 1) {
-                node.entries.pollLast();
-                node.size--;
+            if (node.entries.size() > TP02.X) {
+                for (int i = 0; i < TP02.X; i++) {
+                    node.entries.pollLast();
+                }
+                node.size -= TP02.X;
+                this.sum -= node.key * TP02.X;
+                this.size -= TP02.X;
+                TP02.X = 0;
                 return node;
             } else {
+                TP02.X -= node.entries.size();
+                this.sum -= node.key * node.entries.size();
+                this.size -= node.entries.size();
                 node = null;
                 return tmp;
             }
@@ -817,19 +817,46 @@ class AVLTree {
         return upperBound(node.left, value);
     }
 
-    int getRank(AVLNode node, int key) {
+    // count number of nodes with key > value
+    int countGreater(AVLNode node, int value) {
         if (node == null)
             return 0;
 
-        if (node.key > key)
-            return getRank(node.left, key);
-        // else if (node.key < key)
-        else {
-            // if (node.key == key)
-            TP02.currScore = node;
-            return getSize(node.left) + node.entries.size() + getRank(node.right, key);
-            // return getSize(node.left);
+        if (node.key > value) {
+            return getSize(node.right) + node.entries.size() + countGreater(node.left, value);
+        } else if (node.key < value) {
+            return countGreater(node.right, value);
+        } else {
+            // if (node.key == value)
+            return getSize(node.right);
         }
+    }
+
+    // count number of nodes with key >= value
+    int countGreaterEqual(AVLNode node, int value) {
+        if (node == null)
+            return 0;
+
+        if (node.key > value) {
+            return getSize(node.right) + node.entries.size() + countGreaterEqual(node.left, value);
+        } else if (node.key < value) {
+            return countGreaterEqual(node.right, value);
+        } else {
+            // if (node.key == value)
+            return getSize(node.right) + node.entries.size();
+        }
+    }
+
+    AVLNode searchNode(AVLNode node, int key) {
+        if (node == null)
+            return node;
+
+        if (node.key > key)
+            return searchNode(node.left, key);
+        else if (node.key < key)
+            return searchNode(node.right, key);
+        else
+            return node;
     }
 
     void preOrder(PrintWriter out, AVLNode node) {
