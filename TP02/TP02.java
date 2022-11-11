@@ -106,12 +106,31 @@ public class TP02 {
 
             // move currMesin to the last position
             if (currMesin != listMesin.getLast()) {
-                // remove currMesin from listMesin
-                listMesin.remove(currMesin);
+                if (currMesin == listMesin.start) {
+                    if (listMesin.size == 1) {
+                        listMesin.start = null;
+                        listMesin.end = null;
+                    } else {
+                        // move start and end pointer to the next node of listMesin
+                        listMesin.start = listMesin.start.next;
+                        listMesin.start.prev = listMesin.end;
+                        listMesin.end.next = listMesin.start;
+                    }
+                } else {
+                    // remove currMesin from listMesin
 
-                // add currMesin to the last node of listMesin
-                listMesin.add(currMesin.data);
-                listMesin.getLast().id = currMesin.id;
+                    Node p = currMesin.prev;
+                    Node n = currMesin.next;
+
+                    p.next = n;
+                    n.prev = p;
+                }
+                // add currMesin to the last position of listMesin
+                currMesin.prev = listMesin.end;
+                listMesin.end.next = currMesin;
+                listMesin.start.prev = currMesin;
+                currMesin.next = listMesin.start;
+                listMesin.end = currMesin;
             }
         } else {
             long sumBeforeDel = currMesin.scores.sum;
@@ -381,6 +400,36 @@ class LinkedList {
             ptr = ptr.next;
         }
         return null;
+    }
+
+    // move node to tail
+    public void moveToLast(Node node) {
+        if (node == end) {
+            return;
+        }
+        if (node == start) {
+            start = start.next;
+            end = end.next;
+            return;
+        }
+        Node ptr = start.next;
+        for (int i = 2; i <= size; i++) {
+            if (ptr == node) {
+                Node p = ptr.prev;
+                Node n = ptr.next;
+
+                p.next = n;
+                n.prev = p;
+
+                end.next = ptr;
+                ptr.prev = end;
+                ptr.next = start;
+                start.prev = ptr;
+                end = ptr;
+                return;
+            }
+            ptr = ptr.next;
+        }
     }
 
     public int indexOf(int val) {
