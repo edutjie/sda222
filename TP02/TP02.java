@@ -10,7 +10,7 @@ public class TP02 {
     private static InputReader in;
     static PrintWriter out;
     static LinkedList listMesin = new LinkedList();
-    static int X;
+    // static int X;
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -90,7 +90,7 @@ public class TP02 {
     }
 
     public static long queryHapus(int X) { // X = banyaknya skor teratas yang curang
-        TP02.X = X;
+        // TP02.X = X;
         Node currMesin = listMesin.playerPtr;
         long sumSkor = 0;
 
@@ -137,16 +137,15 @@ public class TP02 {
             // out.println("Before Delete");
             // currMesin.scores.preOrder(out, currMesin.scores.root);
             // out.println("sum " + currMesin.scores.sum);
-            // for (int i = 0; i < X; i++) {
-            // // TODO: delete first X node from AVLTree
-            // currMesin.scores.root =
-            // currMesin.scores.deleteLargest(currMesin.scores.root); // remove largest
-            // element
-            // }
-
-            while (TP02.X > 0) {
-                currMesin.scores.root = currMesin.scores.deleteLargest(currMesin.scores.root);
+            for (int i = 0; i < X; i++) {
+                // TODO: delete first X node from AVLTree
+                currMesin.scores.root = currMesin.scores.deleteLargest(currMesin.scores.root); // remove largest element
             }
+
+            // while (TP02.X > 0) {
+            // currMesin.scores.root =
+            // currMesin.scores.deleteLargest(currMesin.scores.root);
+            // }
 
             sumSkor = sumBeforeDel - currMesin.scores.sum;
             currMesin.data = currMesin.scores.size;
@@ -775,24 +774,18 @@ class AVLTree {
 
     AVLNode deleteLargest(AVLNode node) {
         // BST deletion
-        if (node == null || TP02.X <= 0)
+        if (node == null)
             return node;
 
         if (node.right == null) {
             AVLNode tmp = node.left;
-            if (node.entries.size() > TP02.X) {
-                for (int i = 0; i < TP02.X; i++) {
-                    node.entries.pollLast();
-                }
-                node.size -= TP02.X;
-                this.sum -= node.key * TP02.X;
-                this.size -= TP02.X;
-                TP02.X = 0;
+            this.sum -= node.key;
+            this.size -= 1;
+            if (node.entries.size() > 1) {
+                node.entries.pollLast();
+                node.size--;
                 return node;
             } else {
-                TP02.X -= node.entries.size();
-                this.sum -= node.key * node.entries.size();
-                this.size -= node.entries.size();
                 node = null;
                 return tmp;
             }
