@@ -1,3 +1,5 @@
+// Eduardus Tjitrahardja | 2106653602 | SDA E | TP02
+
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -10,7 +12,6 @@ public class TP02 {
     private static InputReader in;
     static PrintWriter out;
     static LinkedList listMesin = new LinkedList();
-    // static int X;
 
     public static void main(String[] args) {
         InputStream inputStream = System.in;
@@ -23,26 +24,21 @@ public class TP02 {
             int M = in.nextInt(); // banyaknya skor awal Mi pada mesin dengan id i
             listMesin.add(M);
 
-            Node currMesin = listMesin.getLast();
+            Node currMesin = listMesin.end;
             currMesin.id = i;
 
             for (int j = 1; j <= M; j++) {
                 int Z = in.nextInt(); // skor awal Mi pada mesin dengan id i
                 currMesin.scores.root = currMesin.scores.insertNode(currMesin.scores.root, Z);
-                // currMesin.scores.getLast().setId(j);
-                // currMesin.scores.totalScore += Z;
             }
         }
 
-        // listMesin.display();
-
         // set player to the first game machine
-        listMesin.playerPtr = listMesin.getFirst();
+        listMesin.playerPtr = listMesin.start;
 
         int Q = in.nextInt(); // banyaknya query
         for (int i = 0; i < Q; i++) {
             String query = in.next(); // query
-            // listMesin.playerPtr.scores.preOrder(out, listMesin.playerPtr.scores.root);
 
             if (query.equals("MAIN")) {
                 int Y = in.nextInt();
@@ -70,10 +66,6 @@ public class TP02 {
         currScores.root = currScores.insertNode(currScores.root, Y);
         listMesin.playerPtr.data += 1;
 
-        // out.println("currScores size: " + currScores.size);
-        // out.println("currScores rank: " + currScores.countGreater(currScores.root,
-        // Y));
-        // currScores.preOrder(out, currScores.root);
         return currScores.countGreater(currScores.root, Y) + 1;
         // urutan posisi Y pada barisan skor dr mesin permainan yang dimainin
     }
@@ -90,7 +82,6 @@ public class TP02 {
     }
 
     public static long queryHapus(int X) { // X = banyaknya skor teratas yang curang
-        // TP02.X = X;
         Node currMesin = listMesin.playerPtr;
         long sumSkor = 0;
 
@@ -105,7 +96,7 @@ public class TP02 {
             listMesin.playerPtr = currMesin.next;
 
             // move currMesin to the last position
-            if (currMesin != listMesin.getLast()) {
+            if (currMesin != listMesin.end) {
                 if (currMesin == listMesin.start) {
                     if (listMesin.size == 1) {
                         listMesin.start = null;
@@ -142,11 +133,6 @@ public class TP02 {
                 currMesin.scores.root = currMesin.scores.deleteLargest(currMesin.scores.root); // remove largest element
             }
 
-            // while (TP02.X > 0) {
-            // currMesin.scores.root =
-            // currMesin.scores.deleteLargest(currMesin.scores.root);
-            // }
-
             sumSkor = sumBeforeDel - currMesin.scores.sum;
             currMesin.data = currMesin.scores.size;
             // out.println("After Delete");
@@ -162,27 +148,23 @@ public class TP02 {
 
     public static int queryLihat(int L, int H) { // L, H = range yang ingin dilihat
         Node currMesin = listMesin.playerPtr;
-        // currMesin.scores.preOrder(out, currMesin.scores.root);
 
         if (L == H) {
+            // if L == H, return the number of scores in the node where key = H
+            // if not found then return 0
             AVLNode searchedNode = currMesin.scores.searchNode(currMesin.scores.root, H);
             return searchedNode != null ? searchedNode.entries.size() : 0;
         }
 
         int lRank = currMesin.scores.countGreaterEqual(currMesin.scores.root, L);
-        // out.println("lRank: " + lRank);
         int hRank = currMesin.scores.countGreater(currMesin.scores.root, H);
-        // out.println("hRank: " + hRank);
 
         return lRank - hRank;
         // banyaknya skor yang nilainya di range L - H (inklusif)
     }
 
     public static int queryEvaluasi() {
-        // out.println(listMesin.playerPtr.data + ", id: " + listMesin.playerPtr.id);
-        // listMesin.display();
-        int playerPtrIdx = listMesin.sort();
-        // listMesin.display();
+        int playerPtrIdx = listMesin.sort(); // sort listMesin
         return playerPtrIdx; // urutan posisi baru mesin permainan yang berada di depan pemain
     }
 
@@ -263,36 +245,10 @@ class LinkedList {
         return start == null;
     }
 
-    public Node getFirst() {
-        return start;
-    }
-
-    public Node getLast() {
-        return end;
-    }
-
-    /* Function to insert element at begining */
-    public void addFirst(long val) {
-        Node nptr = new Node(val, null, null);
-        if (start == null) {
-            nptr.next = nptr;
-            nptr.prev = nptr;
-            start = nptr;
-            end = start;
-        } else {
-            nptr.prev = end;
-            end.next = nptr;
-            start.prev = nptr;
-            nptr.next = start;
-            start = nptr;
-        }
-        size++;
-    }
-
     /* Function to insert element at end */
     public void add(long val) {
         Node nptr = new Node(val, null, null);
-        if (start == null) {
+        if (this.isEmpty()) {
             nptr.next = nptr;
             nptr.prev = nptr;
             start = nptr;
@@ -305,130 +261,6 @@ class LinkedList {
             end = nptr;
         }
         size++;
-    }
-
-    /* Function to insert element at position */
-    public void addAt(long val, int pos) {
-        Node nptr = new Node(val, null, null);
-        if (pos == 1) {
-            addFirst(val);
-            return;
-        }
-        Node ptr = start;
-        for (int i = 2; i <= size; i++) {
-            if (i == pos) {
-                Node tmp = ptr.next;
-                ptr.next = nptr;
-                nptr.prev = ptr;
-                nptr.next = tmp;
-                tmp.prev = nptr;
-            }
-            ptr = ptr.next;
-        }
-        size++;
-    }
-
-    /* Function to delete node at position */
-    public Node removeAt(int pos) {
-        if (pos == 1) {
-            if (size == 1) {
-                start = null;
-                end = null;
-                size = 0;
-                return start;
-            }
-            start = start.next;
-            start.prev = end;
-            end.next = start;
-            size--;
-            return start;
-        }
-        if (pos == size) {
-            end = end.prev;
-            end.next = start;
-            start.prev = end;
-            size--;
-        }
-        Node ptr = start.next;
-        for (int i = 2; i <= size; i++) {
-            if (i == pos) {
-                Node p = ptr.prev;
-                Node n = ptr.next;
-
-                p.next = n;
-                n.prev = p;
-                size--;
-                return ptr;
-            }
-            ptr = ptr.next;
-        }
-        return null;
-    }
-
-    public Node remove(Node node) {
-        if (node == start) {
-            if (size == 1) {
-                start = null;
-                end = null;
-                size = 0;
-                return start;
-            }
-            start = start.next;
-            start.prev = end;
-            end.next = start;
-            size--;
-            return start;
-        }
-        if (node == end) {
-            end = end.prev;
-            end.next = start;
-            start.prev = end;
-            size--;
-        }
-        Node ptr = start.next;
-        for (int i = 2; i <= size; i++) {
-            if (ptr == node) {
-                Node p = ptr.prev;
-                Node n = ptr.next;
-
-                p.next = n;
-                n.prev = p;
-                size--;
-                return ptr;
-            }
-            ptr = ptr.next;
-        }
-        return null;
-    }
-
-    // move node to tail
-    public void moveToLast(Node node) {
-        if (node == end) {
-            return;
-        }
-        if (node == start) {
-            start = start.next;
-            end = end.next;
-            return;
-        }
-        Node ptr = start.next;
-        for (int i = 2; i <= size; i++) {
-            if (ptr == node) {
-                Node p = ptr.prev;
-                Node n = ptr.next;
-
-                p.next = n;
-                n.prev = p;
-
-                end.next = ptr;
-                ptr.prev = end;
-                ptr.next = start;
-                start.prev = ptr;
-                end = ptr;
-                return;
-            }
-            ptr = ptr.next;
-        }
     }
 
     public int indexOf(int val) {
@@ -450,6 +282,7 @@ class LinkedList {
         start = mergeSort(start);
 
         // transform it back to circular linked list
+        // and count the index of playerPtr
         Node ptr = start;
         int playerPtrIdx = 1;
         boolean isCountingIdx = true;
@@ -466,6 +299,7 @@ class LinkedList {
         start.prev = end;
 
         return playerPtrIdx;
+        // returns the index of playerPtr
     }
 
     // split, mergeSort, merge methods reference:
@@ -508,6 +342,7 @@ class LinkedList {
         }
 
         // Pick the bigger value
+        // sort by node's data
         if (first.data > second.data) {
             first.next = merge(first.next, second);
             first.next.prev = first;
@@ -519,6 +354,7 @@ class LinkedList {
             second.prev = null;
             return second;
         } else {
+            // if node's data is equal, sort by id
             if (first.id < second.id) {
                 first.next = merge(first.next, second);
                 first.next.prev = first;
@@ -639,12 +475,13 @@ class AVLTree {
         // BST insertion
         if (node == null) {
             AVLNode newNode = new AVLNode(key);
+
+            // add key to entries and update size and sum
             newNode.entries.add(key);
             newNode.size++;
             this.size++;
             this.sum += key;
 
-            // TP02.currScore = newNode;
             return newNode;
         }
 
@@ -653,11 +490,12 @@ class AVLTree {
         } else if (key > node.key) {
             node.right = insertNode(node.right, key);
         } else {
+            // add key to entries and update size and sum
             node.entries.add(key);
             node.size++;
             this.size++;
             this.sum += key;
-            // TP02.currScore = node;
+
             return node;
         }
 
@@ -684,87 +522,6 @@ class AVLTree {
 
         // RL
         if (balance < -1 && key < node.right.key) {
-            node.right = rightRotate(node.right);
-            return leftRotate(node);
-        }
-
-        return node;
-    }
-
-    AVLNode deleteNode(AVLNode node, int key) {
-        // TODO: implement delete node
-
-        // BST deletion
-        if (node == null)
-            return node;
-
-        if (key < node.key) {
-            node.left = deleteNode(node.left, key);
-        } else if (key > node.key) {
-            node.right = deleteNode(node.right, key);
-        } else {
-            // key == root.key -> the node we're going to delete
-
-            // node with only one child or no child
-            if ((node.left == null) || (node.right == null)) {
-                AVLNode tmp = null;
-                if (tmp == node.left)
-                    tmp = node.right;
-                else
-                    tmp = node.left;
-
-                // no child
-                if (tmp == null) {
-                    tmp = node;
-                    node = null;
-                } else {
-                    // one child
-                    node = tmp;
-                }
-            } else {
-                // node with two children
-                // inorder successor
-                AVLNode tmp = lowerBound(node.right, node.key);
-
-                // copy the inorder successor's content to this node
-                node.key = tmp.key;
-                node.entries = tmp.entries;
-
-                // delete the inorder successor
-                node.right = deleteNode(node.right, tmp.key);
-            }
-
-            this.size--;
-            this.sum -= key;
-        }
-
-        // if the tree had only one node then return
-        if (node == null)
-            return node;
-
-        // AVL
-
-        updateHeight(node);
-
-        // check balance status
-        int balance = getBalance(node);
-
-        // LL
-        if (balance > 1 && getBalance(node.left) >= 0)
-            return rightRotate(node);
-
-        // RR
-        if (balance < -1 && getBalance(node.right) <= 0)
-            return leftRotate(node);
-
-        // LR
-        if (balance > 1 && getBalance(node.left) < 0) {
-            node.left = leftRotate(node.left);
-            return rightRotate(node);
-        }
-
-        // RL
-        if (balance < -1 && getBalance(node.right) > 0) {
             node.right = rightRotate(node.right);
             return leftRotate(node);
         }
@@ -821,42 +578,6 @@ class AVLTree {
         }
 
         return node;
-    }
-
-    AVLNode lowerBound(AVLNode node, int value) {
-        // TODO: return node with the lowest key that is >= value
-        if (node == null)
-            return node;
-
-        if (node.key == value)
-            return node;
-
-        if (node.key > value) {
-            AVLNode tmp = lowerBound(node.left, value);
-            if (tmp == null)
-                return node;
-            return tmp;
-        }
-
-        return lowerBound(node.right, value);
-    }
-
-    AVLNode upperBound(AVLNode node, int value) {
-        // TODO: return node with the greatest key that is <= value
-        if (node == null)
-            return node;
-
-        if (node.key == value)
-            return node;
-
-        if (node.key < value) {
-            AVLNode tmp = upperBound(node.right, value);
-            if (tmp == null)
-                return node;
-            return tmp;
-        }
-
-        return upperBound(node.left, value);
     }
 
     // count number of nodes with key > value
