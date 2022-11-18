@@ -7,28 +7,13 @@ import java.io.PrintWriter;
 import java.util.*;
 
 // TODO: Lengkapi class ini
-class Saham implements Comparable<Saham> {
+class Saham {
     public int id;
     public int harga;
 
     public Saham(int id, int harga) {
         this.id = id;
         this.harga = harga;
-    }
-
-    @Override
-    public int compareTo(Saham o) {
-        // TODO Auto-generated method stub
-        if (this.harga == o.harga) {
-            return this.id - o.id;
-        }
-        return this.harga - o.harga;
-    }
-
-    @Override
-    public String toString() {
-        // TODO Auto-generated method stub
-        return "id: " + this.id + " harga: " + this.harga;
     }
 }
 
@@ -44,7 +29,6 @@ class Heap {
     public int size;
     public Saham[] data;
     public boolean isMinHeap = true;
-    public int[] indexMap = new int[500000];
 
     public Heap(int capacity) {
         this.capacity = capacity;
@@ -97,19 +81,12 @@ class Heap {
         Saham temp = data[a];
         data[a] = data[b];
         data[b] = temp;
-        indexMap[data[a].id] = a + 1;
-        indexMap[data[b].id] = b + 1;
     }
 
     public void ensureCapacity() {
         if (size == capacity) {
-            if (capacity == 0) {
-                data = Arrays.copyOf(data, 1);
-                capacity = 1;
-            } else {
-                data = Arrays.copyOf(data, capacity * 2);
-                capacity *= 2;
-            }
+            data = Arrays.copyOf(data, capacity * 2);
+            capacity *= 2;
         }
     }
 
@@ -129,9 +106,7 @@ class Heap {
         Saham item = data[0];
         data[0] = data[size - 1];
         size--;
-        indexMap[data[0].id] = 1;
-        indexMap[item.id] = 0;
-        heapifyDown(0);
+        heapifyDown();
         return item;
     }
 
@@ -140,82 +115,94 @@ class Heap {
         ensureCapacity();
         data[size] = item;
         size++;
-        indexMap[item.id] = size;
-        heapifyUp(size - 1);
+        heapifyUp();
     }
 
     public Saham update(int id, int harga) {
-        int i = indexMap[id] - 1;
-        if (i == -1) {
-            return null;
-        }
-        Saham saham = data[i];
-        saham.harga = harga;
-        // heapify
-        if (isMinHeap) {
-            if (hasParent(i) && parent(i).compareTo(saham) > 0) {
-                heapifyUp(i);
-            } else {
-                heapifyDown(i);
+        ArrayList<Saham> poppedData = new ArrayList<>();
+        Saham updatedData = null;
+        for (int i = 0; i < size; i++) {
+            if (data[i].id == id) {
+                data[i].harga = harga;
+                updatedData = data[i];
+                this.poll();
+                break;
             }
-        } else {
-            if (hasParent(i) && parent(i).compareTo(saham) < 0) {
-                heapifyUp(i);
-            } else {
-                heapifyDown(i);
-            }
+            poppedData.add(this.poll());
         }
-        return saham;
+        for (Saham saham : poppedData) {
+            this.add(saham);
+        }
+        return updatedData;
     }
 
-    public void heapifyUp(int index) {
-        // int index = size - 1;
+    public void heapifyUp() {
+        int index = size - 1;
         if (isMinHeap) {
-            while (hasParent(index) && parent(index).compareTo(data[index]) > 0) {
-                // System.out.println("swap " + parent(index) + " with " + data[index]);
+            while (hasParent(index) &&
+                    (parent(index).harga > data[index].harga ||
+                            (parent(index).harga == data[index].harga && parent(index).id > data[index].id))) {
                 swap(getParentIndex(index), index);
                 index = getParentIndex(index);
             }
         } else {
-            while (hasParent(index) && parent(index).compareTo(data[index]) < 0) {
+            while (hasParent(index) &&
+                    (parent(index).harga < data[index].harga ||
+                            (parent(index).harga == data[index].harga && parent(index).id < data[index].id))) {
                 swap(getParentIndex(index), index);
                 index = getParentIndex(index);
             }
         }
     }
 
-    public void heapifyDown(int index) {
-        // int index = 0;
+    public void heapifyDown() {
+        int index = 0;
         while (hasLeftChild(index)) {
-            int smallestChildIndex = getLeftChildIndex(index);
-
+            int smallerChildIndex = getLeftChildIndex(index);
             if (isMinHeap) {
-                if (hasRightChild(index) && rightChild(index).compareTo(leftChild(index)) < 0) {
-                    smallestChildIndex = getRightChildIndex(index);
+                if (hasRightChild(index) && rightChild(index).harga < leftChild(index).harga) {
+                    smallerChildIndex = getRightChildIndex(index);
+                } else if (hasRightChild(index) && rightChild(index).harga == leftChild(index).harga) {
+                    if (rightChild(index).id < leftChild(index).id) {
+                        smallerChildIndex = getRightChildIndex(index);
+                    }
                 }
-                if (data[index].compareTo(data[smallestChildIndex]) < 0) {
+
+                if (data[index].harga < data[smallerChildIndex].harga) {
                     break;
+                } else if (data[index].harga == data[smallerChildIndex].harga) {
+                    if (data[index].id < data[smallerChildIndex].id) {
+                        break;
+                    }
                 } else {
-                    swap(index, smallestChildIndex);
+                    swap(index, smallerChildIndex);
                 }
             } else {
-                if (hasRightChild(index) && rightChild(index).compareTo(leftChild(index)) > 0) {
-                    smallestChildIndex = getRightChildIndex(index);
+                if (hasRightChild(index) && rightChild(index).harga > leftChild(index).harga) {
+                    smallerChildIndex = getRightChildIndex(index);
+                } else if (hasRightChild(index) && rightChild(index).harga == leftChild(index).harga) {
+                    if (rightChild(index).id > leftChild(index).id) {
+                        smallerChildIndex = getRightChildIndex(index);
+                    }
                 }
-                if (data[index].compareTo(data[smallestChildIndex]) > 0) {
-                    break;
+
+                if (data[index].harga < data[smallerChildIndex].harga) {
+                    swap(index, smallerChildIndex);
+                } else if (data[index].harga == data[smallerChildIndex].harga) {
+                    if (data[index].id < data[smallerChildIndex].id) {
+                        swap(index, smallerChildIndex);
+                    }
                 } else {
-                    swap(index, smallestChildIndex);
+                    break;
                 }
             }
-
-            index = smallestChildIndex;
+            index = smallerChildIndex;
         }
     }
 
     public void print(PrintWriter out) {
         for (int i = 0; i < size; i++) {
-            out.print("id: " + data[i].id + " data: " + data[i].harga + ", ");
+            out.print(data[i].id + " ");
         }
         out.println();
     }
@@ -233,72 +220,51 @@ class MedianHeap {
         minHeap = new Heap(capacity);
     }
 
-    public void add(int id, int harga, PrintWriter out) {
-        Saham saham = new Saham(id, harga);
-        if (maxHeap.size == 0 || maxHeap.peek().compareTo(saham) > 0) {
+    public void add(int id, int harga) {
+        if (maxHeap.size == 0 || maxHeap.peek().harga > harga ||
+                (maxHeap.peek().harga == harga && maxHeap.peek().id > id)) {
+            maxHeap.add(new Saham(id, harga));
+        } else {
+            minHeap.add(new Saham(id, harga));
+        }
+
+        balanceHeaps();
+    }
+
+    public void add(Saham saham) {
+        if (maxHeap.size == 0 || maxHeap.peek().harga > saham.harga ||
+                (maxHeap.peek().harga == saham.harga && maxHeap.peek().id > saham.id)) {
             maxHeap.add(saham);
         } else {
             minHeap.add(saham);
         }
 
         balanceHeaps();
-
-        // out.println();
-        // out.print("MAX: ");
-        // maxHeap.print(out);
-        // out.print("MIN: ");
-        // minHeap.print(out);
-
     }
 
-    public int getHarga(Heap heap) {
-        if (heap.size == 0) {
-            return 0;
-        }
-        return heap.peek().harga;
-    }
-
-    public int getId(Heap heap) {
-        if (heap.size == 0) {
-            return 0;
-        }
-        return heap.peek().id;
-    }
-
-    public void update(int id, int harga, int newHarga, PrintWriter out) {
+    public void update(int id, int harga, int newHarga) {
         // maxHeap.print(out);
         // minHeap.print(out);
         Saham updatedData;
-        if (maxHeap.indexMap[id] != 0) {
+        if (maxHeap.peek().harga >= harga || (maxHeap.peek().harga == harga && maxHeap.peek().id >= id)) {
             updatedData = maxHeap.update(id, newHarga);
-            if (updatedData != null && updatedData.compareTo(minHeap.peek()) > 0) {
-                minHeap.add(maxHeap.poll());
-            }
         } else {
             updatedData = minHeap.update(id, newHarga);
-            if (updatedData != null && updatedData.compareTo(maxHeap.peek()) < 0) {
-                maxHeap.add(minHeap.poll());
-            }
         }
-
+        
         balanceHeaps();
+        this.add(updatedData);
         // maxHeap.print(out);
-        // minHeap.print(out);
-        // out.println();
-        // out.println("UPDATE: " + updatedData);
-        // out.print("MAX: ");
-        // maxHeap.print(out);
-        // out.print("MIN: ");
         // minHeap.print(out);
     }
-
+    
     public int getMedian() {
         // maxHeap.print(out);
         // minHeap.print(out);
-        if (maxHeap.size == minHeap.size) {
-            return getId(minHeap);
+        if (maxHeap.size > minHeap.size) {
+            return maxHeap.peek().id;
         } else {
-            return getId(maxHeap);
+            return minHeap.peek().id;
         }
     }
 
@@ -311,7 +277,7 @@ class MedianHeap {
     }
 }
 
-public class Lab6 {
+public class Lab6v1 {
 
     private static InputReader in;
     private static PrintWriter out;
@@ -324,14 +290,13 @@ public class Lab6 {
 
         int N = in.nextInt();
         MedianHeap heap = new MedianHeap(N);
-        // HashMap<Integer, Integer> hargaMap = new HashMap<>();
-        int[] hargaMap = new int[500000];
+        HashMap<Integer, Integer> hargaMap = new HashMap<>();
 
         // TODO
         for (int i = 1; i <= N; i++) {
             int harga = in.nextInt();
-            heap.add(i, harga, out);
-            hargaMap[i] = harga;
+            heap.add(i, harga);
+            hargaMap.put(i, harga);
         }
 
         int Q = in.nextInt();
@@ -342,19 +307,19 @@ public class Lab6 {
 
             if (q.equals("TAMBAH")) {
                 int harga = in.nextInt();
-                heap.add(N + 1, harga, out);
-                hargaMap[N + 1] = harga;
+                heap.add(N + 1, harga);
+                hargaMap.put(N + 1, harga);
                 N++;
                 out.println(heap.getMedian());
             } else if (q.equals("UBAH")) {
                 int nomorSeri = in.nextInt();
                 int harga = in.nextInt();
-                heap.update(nomorSeri, hargaMap[nomorSeri], harga, out);
-                hargaMap[nomorSeri] = harga;
+                heap.update(nomorSeri, hargaMap.get(nomorSeri), harga);
+                hargaMap.put(nomorSeri, harga);
                 out.println(heap.getMedian());
             }
         }
-        out.close();
+        out.flush();
     }
 
     static class InputReader {
