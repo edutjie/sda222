@@ -97,6 +97,8 @@ class Heap {
         Saham temp = data[a];
         data[a] = data[b];
         data[b] = temp;
+
+        // update indexMap
         indexMap[data[a].id] = a + 1;
         indexMap[data[b].id] = b + 1;
     }
@@ -104,6 +106,7 @@ class Heap {
     public void ensureCapacity() {
         if (size == capacity) {
             if (capacity == 0) {
+                // handle rte
                 data = Arrays.copyOf(data, 1);
                 capacity = 1;
             } else {
@@ -129,8 +132,11 @@ class Heap {
         Saham item = data[0];
         data[0] = data[size - 1];
         size--;
+
+        // update indexMap
         indexMap[data[0].id] = 1;
         indexMap[item.id] = 0;
+
         heapifyDown(0);
         return item;
     }
@@ -140,17 +146,22 @@ class Heap {
         ensureCapacity();
         data[size] = item;
         size++;
+
+        // update indexMap
         indexMap[item.id] = size;
+
         heapifyUp(size - 1);
     }
 
     public Saham update(int id, int harga) {
+        // get index from indexMap
         int i = indexMap[id] - 1;
         if (i == -1) {
             return null;
         }
         Saham saham = data[i];
         saham.harga = harga;
+
         // heapify
         if (isMinHeap) {
             if (hasParent(i) && parent(i).compareTo(saham) > 0) {
@@ -169,10 +180,8 @@ class Heap {
     }
 
     public void heapifyUp(int index) {
-        // int index = size - 1;
         if (isMinHeap) {
             while (hasParent(index) && parent(index).compareTo(data[index]) > 0) {
-                // System.out.println("swap " + parent(index) + " with " + data[index]);
                 swap(getParentIndex(index), index);
                 index = getParentIndex(index);
             }
@@ -185,7 +194,6 @@ class Heap {
     }
 
     public void heapifyDown(int index) {
-        // int index = 0;
         while (hasLeftChild(index)) {
             int smallestChildIndex = getLeftChildIndex(index);
 
@@ -233,7 +241,7 @@ class MedianHeap {
         minHeap = new Heap(capacity);
     }
 
-    public void add(int id, int harga, PrintWriter out) {
+    public void add(int id, int harga) {
         Saham saham = new Saham(id, harga);
         if (maxHeap.size == 0 || maxHeap.peek().compareTo(saham) > 0) {
             maxHeap.add(saham);
@@ -265,17 +273,19 @@ class MedianHeap {
         return heap.peek().id;
     }
 
-    public void update(int id, int harga, int newHarga, PrintWriter out) {
+    public void update(int id, int harga) {
         // maxHeap.print(out);
         // minHeap.print(out);
         Saham updatedData;
         if (maxHeap.indexMap[id] != 0) {
-            updatedData = maxHeap.update(id, newHarga);
+            updatedData = maxHeap.update(id, harga);
+            // move data to minHeap if it is greater than minHeap's peek
             if (updatedData != null && updatedData.compareTo(minHeap.peek()) > 0) {
                 minHeap.add(maxHeap.poll());
             }
         } else {
-            updatedData = minHeap.update(id, newHarga);
+            updatedData = minHeap.update(id, harga);
+            // move data to maxHeap if it is less than maxHeap's peek
             if (updatedData != null && updatedData.compareTo(maxHeap.peek()) < 0) {
                 maxHeap.add(minHeap.poll());
             }
@@ -324,14 +334,11 @@ public class Lab6 {
 
         int N = in.nextInt();
         MedianHeap heap = new MedianHeap(N);
-        // HashMap<Integer, Integer> hargaMap = new HashMap<>();
-        int[] hargaMap = new int[500000];
 
         // TODO
         for (int i = 1; i <= N; i++) {
             int harga = in.nextInt();
-            heap.add(i, harga, out);
-            hargaMap[i] = harga;
+            heap.add(i, harga);
         }
 
         int Q = in.nextInt();
@@ -342,15 +349,13 @@ public class Lab6 {
 
             if (q.equals("TAMBAH")) {
                 int harga = in.nextInt();
-                heap.add(N + 1, harga, out);
-                hargaMap[N + 1] = harga;
+                heap.add(N + 1, harga);
                 N++;
                 out.println(heap.getMedian());
             } else if (q.equals("UBAH")) {
                 int nomorSeri = in.nextInt();
                 int harga = in.nextInt();
-                heap.update(nomorSeri, hargaMap[nomorSeri], harga, out);
-                hargaMap[nomorSeri] = harga;
+                heap.update(nomorSeri, harga);
                 out.println(heap.getMedian());
             }
         }
