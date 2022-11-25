@@ -20,10 +20,12 @@ public class Lab7 {
         // graph.addEdge(N, M, i);
         // }
 
+        ArrayList<Integer> attBenteng = new ArrayList<Integer>();
         for (int i = 0; i < M; i++) {
             int F = in.nextInt(); // nomor benteng yang sedang diserang
             // TODO: Tandai benteng F sebagai benteng diserang
-            graph.adj.get(F - 1).isAttacked = true;
+            graph.adj.get(F).isAttacked = true;
+            attBenteng.add(F);
         }
 
         int E = in.nextInt(); // jumlah jalan yang terdapat pada Kerajaan Fortdom
@@ -32,16 +34,42 @@ public class Lab7 {
             // (weight)
             int A = in.nextInt(), B = in.nextInt(), W = in.nextInt();
             // TODO: Inisialisasi jalan berarah dari benteng A ke B dengan W musuh
-            graph.addEdge(A, B, W);
+            graph.addEdge(B, A, W);
+        }
+
+        // store the result of dijkstra algorithm
+        ArrayList<Integer> minDist = new ArrayList<>();
+        for (int benteng : attBenteng) {
+            ArrayList<Integer> dist = graph.dijkstra(benteng);
+
+            // update the minimum distance from dist to minDist
+            if (minDist.isEmpty()) {
+                minDist = dist;
+            } else {
+                for (int i = 1; i < dist.size(); i++) {
+                    if (dist.get(i) < minDist.get(i)) {
+                        minDist.set(i, dist.get(i));
+                    }
+                }
+            }
         }
 
         int Q = in.nextInt(); // jumlah query
-        boolean visited[][] = new boolean[5000][5000];
+        // boolean visited[][] = new boolean[5000][5000];
         while (Q-- > 0) {
             // S = source; K = jumlah orang bala bantuan
             int S = in.nextInt(), K = in.nextInt();
             // TODO: Implementasi query
-            out.println(graph.bfs(S, K, visited, out) ? "YES" : "NO");
+            int dist = minDist.get(S);
+
+            // boolean isSaved = false;
+
+            out.println(dist < K ? "YES" : "NO");
+            // for (int i = 0; i < result.size(); i++) {
+            // out.print(i + ": " + result.get(i) + ", ");
+            // }
+            // out.println();
+            // out.println(graph.bfs(S, K, visited, out) ? "YES" : "NO");
         }
 
         out.close();
@@ -79,33 +107,37 @@ public class Lab7 {
     }
 }
 
-class Pair {
+class Pair implements Comparable<Pair> {
     // first = source; second = jumlah bala bantuan
-    int first, second;
+    int src, troops;
 
-    public Pair(int first, int second) {
-        this.first = first;
-        this.second = second;
+    public Pair(int src, int troops) {
+        this.src = src;
+        this.troops = troops;
+    }
+
+    @Override
+    public int compareTo(Pair o) {
+        return this.troops - o.troops;
     }
 }
 
 class Edge {
     // from = source; to = destination; weight = jumlah musuh
-    int from, to, weight;
+    int to, weight;
 
-    public Edge(int from, int to, int weight) {
-        this.from = from;
+    public Edge(int to, int weight) {
         this.to = to;
         this.weight = weight;
     }
 }
 
 class Vertex {
-    LinkedList<Edge> edges;
+    ArrayDeque<Edge> edges;
     boolean isAttacked;
 
     public Vertex() {
-        this.edges = new LinkedList<Edge>();
+        this.edges = new ArrayDeque<>();
         this.isAttacked = false;
     }
 }
@@ -120,40 +152,102 @@ class Graph {
     public Graph(int v) {
         this.V = v;
         this.adj = new ArrayList<>();
-        for (int i = 1; i <= v; i++)
+        for (int i = 0; i <= v; i++)
             this.adj.add(new Vertex());
     }
 
     public void addEdge(int v, int w, int weight) {
-        this.adj.get(v - 1).edges.add(new Edge(v, w, weight));
+        this.adj.get(v).edges.add(new Edge(w, weight));
     }
 
-    public boolean bfs(int src, int troops, boolean[][] visited, PrintWriter out) {
-        ArrayDeque<Pair> queue = new ArrayDeque<>();
-        queue.add(new Pair(src, troops));
-        while (!queue.isEmpty()) {
-            Pair curr = queue.poll();
-            int currSrc = curr.first;
-            int currTroops = curr.second;
-            if (currTroops <= 0)
+    public ArrayList<Integer> dijkstra(int source) {
+        if (source == 0)
+            return null;
+        ArrayList<Integer> dist = new ArrayList<>();
+        for (int i = 0; i <= this.V; i++)
+            dist.add(Integer.MAX_VALUE);
+        dist.set(source, 0);
+
+        PriorityQueue<Pair> pq = new PriorityQueue<>();
+        pq.add(new Pair(source, 0));
+
+        while (!pq.isEmpty()) {
+            Pair curr = pq.poll();
+            int v = curr.src; // source
+            int w = curr.troops; // jumlah bala bantuan
+
+            if (w > dist.get(v))
                 continue;
-            // out.println("======================================================");
-            // out.println("currSrc: " + currSrc + " currTroops: " + currTroops);
-            if (this.adj.get(currSrc - 1).isAttacked)
-                return true;
-            visited[currSrc - 1][currTroops - 1] = true;
-            for (Edge edge : this.adj.get(currSrc - 1).edges) {
-                int nextSrc = edge.to;
-                int enemy = edge.weight;
-                if (!visited[nextSrc - 1][currTroops - 1]) {
-                    // out.println("nextSrc: " + nextSrc + " enemy: " + enemy);
-                    if (currTroops - enemy > 0)
-                        queue.add(new Pair(nextSrc, currTroops - enemy));
+
+            for (Edge e : this.adj.get(v).edges) {
+                int u = e.to;
+                int weight = e.weight;
+                if (dist.get(v) + weight < dist.get(u)) {
+                    dist.set(u, dist.get(v) + weight);
+                    pq.add(new Pair(u, dist.get(u)));
                 }
             }
-            // out.println("END");
         }
 
-        return false;
+        return dist;
     }
+
+    // public ArrayList<Integer> dijkstra(int source, int troops, PrintWriter out) {
+    // ArrayList<Integer> dist = new ArrayList<>();
+    // for (int i = 0; i <= this.V; i++)
+    // dist.add(Integer.MAX_VALUE);
+    // dist.set(source, 0);
+
+    // PriorityQueue<Pair> pq = new PriorityQueue<>();
+    // pq.add(new Pair(source, 0));
+
+    // while (!pq.isEmpty()) {
+    // Pair curr = pq.poll();
+    // int v = curr.src; // source
+    // int w = curr.troops; // jumlah bala bantuan
+
+    // if (w > dist.get(v))
+    // continue;
+
+    // for (Edge e : this.adj.get(v).edges) {
+    // int u = e.to;
+    // int weight = e.weight;
+    // if (dist.get(v) + weight < dist.get(u)) {
+    // dist.set(u, dist.get(v) + weight);
+    // pq.add(new Pair(u, dist.get(u)));
+    // }
+    // }
+    // }
+
+    // return dist;
+    // }
+
+    // public boolean bfs(int src, int troops, boolean[][] visited, PrintWriter out)
+    // {
+    // ArrayDeque<Pair> queue = new ArrayDeque<>();
+    // queue.add(new Pair(src, troops));
+    // while (!queue.isEmpty()) {
+    // Pair curr = queue.poll();
+    // int currSrc = curr.first;
+    // int currTroops = curr.second;
+    // if (currTroops <= 0)
+    // continue;
+    // // out.println("======================================================");
+    // // out.println("currSrc: " + currSrc + " currTroops: " + currTroops);
+    // if (this.adj.get(currSrc - 1).isAttacked)
+    // return true;
+    // visited[currSrc - 1][currTroops - 1] = true;
+    // for (Edge edge : this.adj.get(currSrc - 1).edges) {
+    // int nextSrc = edge.to;
+    // int enemy = edge.weight;
+    // if (!visited[nextSrc - 1][currTroops - 1]) {
+    // // out.println("nextSrc: " + nextSrc + " enemy: " + enemy);
+    // if (currTroops - enemy > 0)
+    // queue.add(new Pair(nextSrc, currTroops - enemy));
+    // }
+    // }
+    // // out.println("END");
+    // }
+    // return false;
+    // }
 }
