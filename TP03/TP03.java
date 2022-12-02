@@ -177,10 +177,12 @@ class Graph {
         this.adj.get(from).add(new Edge(to, length, size));
     }
 
-    public ArrayList<Integer> getMaxSize(int source) {
-        // refernsi:
-        // https://www.geeksforgeeks.org/widest-path-problem-practical-application-of-dijkstras-algorithm/
+    /*
+     * all dijkstra made by looking at this reference:
+     * https://cp-algorithms.com/graph/01_bfs.html
+     */
 
+    public ArrayList<Integer> getMaxSize(int source) {
         if (source == 0)
             return null;
         ArrayList<Integer> bottleneck = new ArrayList<>();
@@ -189,7 +191,7 @@ class Graph {
         bottleneck.set(source, Integer.MAX_VALUE);
 
         // priority queue
-        Heap pq = new Heap(this.V);
+        Heap pq = new Heap(this.V); // max heap
         pq.add(new Pair(source, 0));
 
         // visited array
@@ -225,7 +227,7 @@ class Graph {
         for (int i = 0; i <= this.V; i++)
             dist.add(Integer.MAX_VALUE);
 
-        Heap pq = new Heap(this.V, true);
+        Heap pq = new Heap(this.V, true); // min heap
 
         for (int src : sources) {
             dist.set(src, 0);
@@ -266,7 +268,7 @@ class Graph {
             dist.add(Integer.MAX_VALUE);
         dist.set(source, 0);
 
-        Heap pq = new Heap(this.V, true);
+        Heap pq = new Heap(this.V, true); // min heap
         pq.add(new Pair(source, 0));
 
         // visited array
@@ -297,16 +299,20 @@ class Graph {
     }
 
     public int[][] superDijkstra(int source) {
+        // modifed using this reference:
+        // https://codeforces.com/blog/entry/70589
+
         if (source == 0)
             return null;
-        int[][] dp = new int[this.V + 1][2];
+        int K = 1; // max number of edges can be cut
+        int[][] dp = new int[this.V + 1][K + 1];
         for (int i = 0; i <= this.V; i++) {
             dp[i][0] = Integer.MAX_VALUE;
             dp[i][1] = Integer.MAX_VALUE;
         }
         dp[source][0] = 0;
 
-        Heap pq = new Heap(this.V);
+        Heap pq = new Heap(this.V, true); // min heap
         pq.add(new Pair(source, 0, 0));
 
         while (!pq.isEmpty()) {
@@ -322,13 +328,14 @@ class Graph {
                 int u = e.to;
                 int weight = e.length;
 
-                if (w + weight < dp[u][k]) {
-                    dp[u][k] = w + weight;
+                if (dp[v][k] + weight < dp[u][k]) {
+                    dp[u][k] = dp[v][k] + weight;
                     pq.add(new Pair(u, dp[u][k], k));
                 }
-                if (k == 0 && w < dp[u][k + 1]) {
-                    dp[u][k + 1] = w;
-                    pq.add(new Pair(u, dp[u][k + 1] + 1, k + 1));
+
+                if (k + 1 <= K && dp[v][k] < dp[u][k + 1]) {
+                    dp[u][k + 1] = dp[v][k];
+                    pq.add(new Pair(u, dp[u][k + 1], k + 1));
                 }
             }
         }
