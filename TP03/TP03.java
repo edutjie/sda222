@@ -1,4 +1,4 @@
-// Eduardus Tjitrahardja | 2106653602
+// Eduardus Tjitrahardja | 2106653602 | TP03
 
 import java.io.*;
 import java.util.*;
@@ -22,6 +22,8 @@ public class TP03 {
             // A = nomor pos awal, B = nomor pos akhir,
             // L = panjang terowongan, S = ukuran terowongan
             int A = in.nextInt(), B = in.nextInt(), L = in.nextInt(), S = in.nextInt();
+
+            // generate bidirectional edge
             graph.addEdge(A, B, L, S);
             graph.addEdge(B, A, L, S);
         }
@@ -69,18 +71,24 @@ public class TP03 {
                 // V1 = nomor pos awal, V2 = nomor pos akhir, V3 = nomor pos selanjutnya
                 int V1 = in.nextInt(), V2 = in.nextInt(), V3 = in.nextInt();
 
-                int[][] dist = graph.superDijkstra(V1);
-                int dist1 = dist[V2][0]; // normal distance
-                int dist1Super = dist[V2][1]; // skipped one distance
+                if (V1 == V2 && V2 == V3) {
+                    // handle if V1 = V2 = V3
+                    out.println(0);
+                } else {
+                    int[][] dist = graph.superDijkstra(V1);
+                    int dist1 = dist[V2][0]; // normal distance
+                    int dist1Super = dist[V2][1]; // skipped one distance
 
-                dist = graph.superDijkstra(V2);
-                int dist2 = dist[V3][0]; // normal distance
-                int dist2Super = dist[V3][1]; // skipped one distance
+                    dist = graph.superDijkstra(V2);
+                    int dist2 = dist[V3][0]; // normal distance
+                    int dist2Super = dist[V3][1]; // skipped one distance
 
-                // get the minimum distance from V1 to V3 that through V2
-                int minDist = Math.min(dist1 + dist2Super, dist1Super + dist2);
-                // returns jumlah detik terkecil yang dibutuhkan kurcaci untuk ke V3
-                out.println(minDist);
+                    // get the minimum distance from V1 to V3 that through V2
+                    int minDist = Math.min(dist1 + dist2Super, dist1Super + dist2);
+                    // returns jumlah detik terkecil yang dibutuhkan kurcaci untuk ke V3
+                    out.println(minDist);
+                }
+
             }
         }
 
@@ -120,9 +128,7 @@ public class TP03 {
 
 class Pair implements Comparable<Pair> {
     // first = source; second = jumlah bala bantuan
-    int src;
-    int weight;
-    int k;
+    int src, weight, k;
 
     public Pair(int src, int weight) {
         this.src = src;
@@ -144,9 +150,7 @@ class Pair implements Comparable<Pair> {
 class Edge {
     // from = source; to = destination;
     // length = panjang terowongan; size = ukuran terowongan
-    int to;
-    int length;
-    int size;
+    int to, length, size;
 
     public Edge(int to, int length, int size) {
         this.to = to;
