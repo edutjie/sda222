@@ -69,19 +69,15 @@ public class TP03 {
                 // V1 = nomor pos awal, V2 = nomor pos akhir, V3 = nomor pos selanjutnya
                 int V1 = in.nextInt(), V2 = in.nextInt(), V3 = in.nextInt();
 
-                // out.println(graph.superDijkstra(V1));
-                // out.println(graph.superDijkstra(V2));
-                // out.println("-----------------");
-
                 int[][] dist = graph.superDijkstra(V1);
-                int dist1 = dist[V2][0];
-                int dist1Super = dist[V2][1];
-                // int minDist = Math.min(dist[V2][0], dist[V2][1]);
+                int dist1 = dist[V2][0]; // normal distance
+                int dist1Super = dist[V2][1]; // skipped one distance
 
                 dist = graph.superDijkstra(V2);
-                int dist2 = dist[V3][0];
-                int dist2Super = dist[V3][1];
+                int dist2 = dist[V3][0]; // normal distance
+                int dist2Super = dist[V3][1]; // skipped one distance
 
+                // get the minimum distance from V1 to V3 that through V2
                 int minDist = Math.min(dist1 + dist2Super, dist1Super + dist2);
                 // returns jumlah detik terkecil yang dibutuhkan kurcaci untuk ke V3
                 out.println(minDist);
@@ -183,6 +179,8 @@ class Graph {
      */
 
     public ArrayList<Integer> getMaxSize(int source) {
+        // referensi:
+        // https://www.geeksforgeeks.org/widest-path-problem-practical-application-of-dijkstras-algorithm/
         if (source == 0)
             return null;
         ArrayList<Integer> bottleneck = new ArrayList<>();
@@ -203,14 +201,12 @@ class Graph {
 
             visited[v] = true; // mark as visited
 
+            // relax
             for (Edge e : this.adj.get(v)) {
                 int u = e.to;
                 int weight = e.size;
                 int maxBottleneck = Math.max(bottleneck.get(u), Math.min(bottleneck.get(v), weight));
                 if (!visited[u] && maxBottleneck > bottleneck.get(u)) {
-                    // out.println("v = " + v + ", u = " + u + ", weight = " + weight + ",
-                    // bottleneck(u) = " + bottleneck.get(u) + ", bottleneck(v) = " +
-                    // bottleneck.get(v));
                     bottleneck.set(u, maxBottleneck);
                     pq.add(new Pair(u, maxBottleneck));
                 }
@@ -247,6 +243,7 @@ class Graph {
             if (w > dist.get(v))
                 continue;
 
+            // relax
             for (Edge e : this.adj.get(v)) {
                 int u = e.to;
                 int weight = e.length;
@@ -284,6 +281,7 @@ class Graph {
             if (w > dist.get(v))
                 continue;
 
+            // relax
             for (Edge e : this.adj.get(v)) {
                 int u = e.to;
                 int weight = e.length;
@@ -324,6 +322,7 @@ class Graph {
             if (w > dp[v][k])
                 continue;
 
+            // relax
             for (Edge e : this.adj.get(v)) {
                 int u = e.to;
                 int weight = e.length;
@@ -355,7 +354,6 @@ class Heap {
     public int size;
     public Pair[] data;
     public boolean isMinHeap = false;
-    // public int[] indexMap = new int[500000];
 
     public Heap(int capacity) {
         this.capacity = capacity;
@@ -412,10 +410,6 @@ class Heap {
         Pair temp = data[a];
         data[a] = data[b];
         data[b] = temp;
-
-        // update indexMap
-        // indexMap[data[a].id] = a + 1;
-        // indexMap[data[b].id] = b + 1;
     }
 
     public void ensureCapacity() {
@@ -448,10 +442,6 @@ class Heap {
         data[0] = data[size - 1];
         size--;
 
-        // update indexMap
-        // indexMap[data[0].id] = 1;
-        // indexMap[item.id] = 0;
-
         heapifyDown(0);
         return item;
     }
@@ -462,37 +452,8 @@ class Heap {
         data[size] = item;
         size++;
 
-        // update indexMap
-        // indexMap[item.id] = size;
-
         heapifyUp(size - 1);
     }
-
-    // public T update(int id, int harga) {
-    // // get index from indexMap
-    // int i = indexMap[id] - 1;
-    // if (i == -1) {
-    // return null;
-    // }
-    // T T = data[i];
-    // T.harga = harga;
-
-    // // heapify
-    // if (isMinHeap) {
-    // if (hasParent(i) && parent(i).compareTo(T) > 0) {
-    // heapifyUp(i);
-    // } else {
-    // heapifyDown(i);
-    // }
-    // } else {
-    // if (hasParent(i) && parent(i).compareTo(T) < 0) {
-    // heapifyUp(i);
-    // } else {
-    // heapifyDown(i);
-    // }
-    // }
-    // return T;
-    // }
 
     public void heapifyUp(int index) {
         if (isMinHeap) {
@@ -535,11 +496,4 @@ class Heap {
             index = smallestChildIndex;
         }
     }
-
-    // public void print(PrintWriter out) {
-    // for (int i = 0; i < size; i++) {
-    // out.print("id: " + data[i].id + " data: " + data[i].harga + ", ");
-    // }
-    // out.println();
-    // }
 }
