@@ -39,6 +39,7 @@ public class Lab7 {
         ArrayList<Long> minDist = new ArrayList<>();
         for (int benteng : attBenteng) {
             ArrayList<Long> dist = graph.dijkstra(benteng);
+            out.println("Benteng " + benteng + " : " + dist);
 
             // update the minimum distance from dist to minDist
             if (minDist.isEmpty()) {
@@ -51,6 +52,7 @@ public class Lab7 {
                 }
             }
         }
+        out.println("Minimal : " + minDist);
 
         int Q = in.nextInt(); // jumlah query
         while (Q-- > 0) {
